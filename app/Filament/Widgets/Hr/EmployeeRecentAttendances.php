@@ -13,7 +13,7 @@ class EmployeeRecentAttendances extends BaseWidget
     // لازم يكون مهيّأ
     public ?int $employeeId = null;
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     public function mount(?int $employeeId = null): void
     {

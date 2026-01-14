@@ -2,6 +2,12 @@
 
 use Illuminate\Support\Str;
 
+$sessionDomain = trim((string) env('SESSION_DOMAIN', ''));
+$appUrlHost = Str::of(env('APP_URL', ''))
+    ->before('?')
+    ->before(':')
+    ->value();
+
 return [
 
     /*
@@ -156,7 +162,34 @@ return [
     |
     */
 
-    'domain' => env('SESSION_DOMAIN'),
+    'domain' => (function () use ($sessionDomain, $appUrlHost) {
+        if ($sessionDomain === '') {
+            return null;
+        }
+
+        $normalize = fn (?string $value): ?string => $value !== null
+            ? strtolower(Str::before($value, ':'))
+            : null;
+
+        $requestHost = $normalize($_SERVER['HTTP_HOST'] ?? $appUrlHost);
+        $configuredHost = $normalize($sessionDomain);
+
+        if ($requestHost && $configuredHost && $requestHost !== $configuredHost) {
+            return null;
+        }
+
+        if (
+            $configuredHost
+            && (
+                filter_var($configuredHost, FILTER_VALIDATE_IP)
+                || $configuredHost === 'localhost'
+            )
+        ) {
+            return null;
+        }
+
+        return $sessionDomain;
+    })(),
 
     /*
     |--------------------------------------------------------------------------

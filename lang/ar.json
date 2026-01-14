@@ -1,0 +1,20 @@
+{
+  "Portal": "البوابة",
+  "Company name": "اسم الشركة",
+  "Company domain": "دومين الشركة",
+  "Example: company.example.com (optional in local)": "مثال: company.example.com (اختياري محلياً)",
+  "Admin name": "اسم المدير",
+  "Email": "البريد الإلكتروني",
+  "Password": "كلمة المرور",
+  "Confirm password": "تأكيد كلمة المرور",
+  "Customers": "العملاء",
+  "Bookings": "الحجوزات",
+  "Invoices": "الفواتير",
+  "Dashboard": "لوحة التحكم",
+  "Company settings": "إعدادات الشركة",
+  "Logo": "الشعار",
+  "Primary color": "اللون الأساسي",
+  "Used for branding (basic).": "يستخدم للهوية بشكل مبسط.",
+  "Saved.": "تم الحفظ.",
+  "Save": "حفظ"
+}

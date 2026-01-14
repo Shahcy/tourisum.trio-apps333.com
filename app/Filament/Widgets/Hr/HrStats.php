@@ -19,7 +19,7 @@ class HrStats extends StatsOverviewWidget
         return 'ملخص الموارد البشرية';
     }
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected function getStats(): array
     {

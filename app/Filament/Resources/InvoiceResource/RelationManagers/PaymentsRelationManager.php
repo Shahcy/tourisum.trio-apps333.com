@@ -8,8 +8,8 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Models\InvoicePayment;
 use App\Models\Account;
+use App\Models\CostCenter;
 use Filament\Forms\Components\Select;
 
 class PaymentsRelationManager extends RelationManager
@@ -38,13 +38,10 @@ class PaymentsRelationManager extends RelationManager
                     'card' => 'Card',
                     'bank' => 'Bank Transfer',
                     'wallet' => 'Wallet',
+                    'other' => 'Other',
                 ])
                 ->required()
                 ->default('cash'),
-
-            Forms\Components\TextInput::make('reference')
-                ->label('Reference')
-                ->maxLength(255),
 
             Forms\Components\Textarea::make('notes')
                 ->label('ملاحظات')
@@ -70,6 +67,17 @@ class PaymentsRelationManager extends RelationManager
                 ->searchable()
                 ->required(),
 
+            Select::make('cost_center_id')
+                ->label('مركز التكلفة')
+                ->options(
+                    fn() => CostCenter::query()
+                        ->where('tenant_id', Filament::getTenant()?->getKey())
+                        ->pluck('name', 'id')
+                        ->toArray()
+                )
+                ->searchable()
+                ->nullable(),
+
 
         ]);
     }
@@ -89,7 +97,12 @@ class PaymentsRelationManager extends RelationManager
                     }),
             ])
             ->columns([
-                // ...
+                Tables\Columns\TextColumn::make('date')->label('التاريخ')->date(),
+                Tables\Columns\TextColumn::make('amount')->label('المبلغ')->money('USD'),
+                Tables\Columns\TextColumn::make('method')->label('الطريقة'),
+                Tables\Columns\TextColumn::make('direction')->label('الاتجاه'),
+                Tables\Columns\TextColumn::make('account.name')->label('الحساب'),
+                Tables\Columns\TextColumn::make('notes')->label('ملاحظات')->limit(30),
             ]);
     }
 }

@@ -2,23 +2,24 @@
 
 namespace App\Providers\Filament;
 
-use App\Models\Tenant;
+use App\Http\Middleware\SetLocale;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
+use BezhanSalleh\FilamentShield\Resources\RoleResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use App\Filament\Resources\Shield\RoleResource as ShieldRoleResource;
+use Illuminate\Support\Facades\App;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -28,24 +29,49 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->authGuard('web')
             ->login()
+
+            // Brand ثابت للأدمن (Global)
+            ->brandName(config('app.name'))
+            ->brandLogo(null)
+
+            ->userMenuItems([
+                MenuItem::make('switch_to_ar')
+                    ->label('العربية')
+                    ->url(fn() => route('lang.switch', ['locale' => 'ar']))
+                    ->visible(fn() => App::getLocale() !== 'ar'),
+                MenuItem::make('switch_to_en')
+                    ->label('English')
+                    ->url(fn() => route('lang.switch', ['locale' => 'en']))
+                    ->visible(fn() => App::getLocale() !== 'en'),
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])
+
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->resources([
-                ShieldRoleResource::class,
+                RoleResource::class,
+            ])
+
+            ->resources([
+                \App\Filament\Resources\TenantResource::class,
+                \App\Filament\Resources\UserResource::class,
             ])
 
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+
             ->pages([
                 \App\Filament\Pages\Dashboard::class,
             ])
             ->widgets([
-                //Widgets\AccountWidget::class,
-                //Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\AdminStats::class,
+                \App\Filament\Widgets\AlertsList::class,
             ])
+
+            // Web middleware stack
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -54,6 +80,7 @@ class AdminPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
+                SetLocale::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
@@ -62,7 +89,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->tenant(Tenant::class);
+            ]);
     }
 }

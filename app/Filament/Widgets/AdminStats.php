@@ -11,7 +11,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class AdminStats extends StatsOverviewWidget
 {
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected function getStats(): array
     {

@@ -4,10 +4,12 @@ namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Gate;
-use App\Models\Payment;
-use App\Observers\PaymentObserver;
 use App\Models\InvoiceItem;
 use App\Observers\InvoiceItemObserver;
+use App\Models\Payment;
+use App\Observers\PaymentObserver;
+use App\Models\Booking;
+use App\Observers\BookingObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -31,5 +33,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         InvoiceItem::observe(InvoiceItemObserver::class);
+        Payment::observe(PaymentObserver::class);
+        Booking::observe(BookingObserver::class);
     }
 }

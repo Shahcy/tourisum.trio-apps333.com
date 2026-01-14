@@ -12,7 +12,7 @@ class EmployeeRecentLeaves extends BaseWidget
 {
     public int $employeeId;
 
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected function getHeading(): ?string
     {

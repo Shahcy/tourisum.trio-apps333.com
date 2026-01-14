@@ -10,7 +10,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class AlertsList extends BaseWidget
 {
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected static ?string $heading = 'تنبيهات التحصيل (فواتير متأخرة)';
 

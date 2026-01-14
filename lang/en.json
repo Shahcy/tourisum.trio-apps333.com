@@ -1,0 +1,20 @@
+{
+  "Portal": "Portal",
+  "Company name": "Company name",
+  "Company domain": "Company domain",
+  "Example: company.example.com (optional in local)": "Example: company.example.com (optional in local)",
+  "Admin name": "Admin name",
+  "Email": "Email",
+  "Password": "Password",
+  "Confirm password": "Confirm password",
+  "Customers": "Customers",
+  "Bookings": "Bookings",
+  "Invoices": "Invoices",
+  "Dashboard": "Dashboard",
+  "Company settings": "Company settings",
+  "Logo": "Logo",
+  "Primary color": "Primary color",
+  "Used for branding (basic).": "Used for branding (basic).",
+  "Saved.": "Saved.",
+  "Save": "Save"
+}

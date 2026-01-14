@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Gate;
 
 class PendingLeaveRequests extends BaseWidget
 {
-    protected static bool $isLazy = false;
+    protected static bool $isLazy = true;
 
     protected function getHeading(): ?string
     {

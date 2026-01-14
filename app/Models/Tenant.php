@@ -19,6 +19,8 @@ class Tenant extends Model
         'phone',
         'country',
         'currency',
+        'logo_path',
+        'primary_color',
         'is_active',
     ];
 
