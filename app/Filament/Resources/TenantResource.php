@@ -12,6 +12,7 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use App\Filament\Resources\Concerns\TranslatesResourceAttributes;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -20,6 +21,8 @@ use Spatie\Permission\Models\Role;
 
 class TenantResource extends Resource
 {
+    use TranslatesResourceAttributes;
+
     protected static ?string $model = Tenant::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';

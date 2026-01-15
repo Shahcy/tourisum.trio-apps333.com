@@ -8,7 +8,7 @@ use Filament\Widgets\ChartWidget;
 
 class BookingsStatusChart extends ChartWidget
 {
-    protected static ?string $heading = 'الحجوزات حسب الحالة';
+    protected static ?string $heading = 'Bookings by Status';
 
     protected static bool $isLazy = true;
 
@@ -19,12 +19,12 @@ class BookingsStatusChart extends ChartWidget
         $tenantId = Filament::auth()->user()->tenant_id;
 
         $statuses = [
-            'draft' => 'Draft',
-            'quoted' => 'Quoted',
-            'confirmed' => 'Confirmed',
-            'ticketed' => 'Ticketed',
-            'completed' => 'Completed',
-            'cancelled' => 'Cancelled',
+            'draft' => __('Draft'),
+            'quoted' => __('Quoted'),
+            'confirmed' => __('Confirmed'),
+            'ticketed' => __('Ticketed'),
+            'completed' => __('Completed'),
+            'cancelled' => __('Cancelled'),
         ];
 
         $rows = Booking::where('tenant_id', $tenantId)
@@ -52,5 +52,10 @@ class BookingsStatusChart extends ChartWidget
     protected function getType(): string
     {
         return 'doughnut';
+    }
+
+    public function getHeading(): string
+    {
+        return __('Bookings by Status');
     }
 }

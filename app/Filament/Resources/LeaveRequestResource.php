@@ -17,55 +17,76 @@ class LeaveRequestResource extends Resource
 {
     protected static ?string $model = LeaveRequest::class;
 
-    protected static ?string $navigationGroup = 'HR';
     protected static ?int $navigationSort = 30;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationLabel = 'Leave Requests';
 
-    // Tenancy (عشان ما يعتمد على التخمين)
+    // Tenancy
     protected static ?string $tenantOwnershipRelationshipName = 'tenant';
     protected static ?string $tenantRelationshipName = 'leaveRequests';
+
+    /**
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('hr.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('hr.leave_requests.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('hr.leave_requests.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('hr.leave_requests.plural');
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Select::make('employee_id')
-                ->label('الموظف')
+                ->label(__('hr.leave_requests.fields.employee'))
                 ->relationship('employee', 'full_name')
                 ->searchable()
                 ->preload()
                 ->required(),
 
             Forms\Components\DatePicker::make('start_date')
-                ->label('من تاريخ')
+                ->label(__('hr.leave_requests.fields.start_date'))
                 ->required(),
 
             Forms\Components\DatePicker::make('end_date')
-                ->label('إلى تاريخ')
+                ->label(__('hr.leave_requests.fields.end_date'))
                 ->required(),
 
             Forms\Components\Select::make('type')
-                ->label('نوع الإجازة')
+                ->label(__('hr.leave_requests.fields.type'))
                 ->options([
-                    'annual' => 'سنوية',
-                    'sick' => 'مرضية',
-                    'unpaid' => 'بدون راتب',
-                    'other' => 'أخرى',
+                    'annual' => __('hr.leave_requests.types.annual'),
+                    'sick'   => __('hr.leave_requests.types.sick'),
+                    'unpaid' => __('hr.leave_requests.types.unpaid'),
+                    'other'  => __('hr.leave_requests.types.other'),
                 ])
                 ->required(),
 
             Forms\Components\Select::make('status')
-                ->label('الحالة')
+                ->label(__('hr.leave_requests.fields.status'))
                 ->options([
-                    'pending' => 'معلّقة',
-                    'approved' => 'مقبولة',
-                    'rejected' => 'مرفوضة',
+                    'pending'  => __('hr.leave_requests.statuses.pending'),
+                    'approved' => __('hr.leave_requests.statuses.approved'),
+                    'rejected' => __('hr.leave_requests.statuses.rejected'),
                 ])
                 ->default('pending')
                 ->required(),
 
             Forms\Components\Textarea::make('reason')
-                ->label('السبب / ملاحظات')
+                ->label(__('hr.leave_requests.fields.reason'))
                 ->rows(4),
         ]);
     }
@@ -75,43 +96,45 @@ class LeaveRequestResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('employee.full_name')
-                    ->label('الموظف')
+                    ->label(__('hr.leave_requests.fields.employee'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('type')
-                    ->label('النوع')
+                    ->label(__('hr.leave_requests.fields.type'))
                     ->badge()
-                    ->formatStateUsing(fn(string $state) => match ($state) {
-                        'annual' => 'سنوية',
-                        'sick' => 'مرضية',
-                        'unpaid' => 'بدون راتب',
-                        default => 'أخرى',
+                    ->formatStateUsing(fn(?string $state) => match ($state) {
+                        'annual' => __('hr.leave_requests.types.annual'),
+                        'sick'   => __('hr.leave_requests.types.sick'),
+                        'unpaid' => __('hr.leave_requests.types.unpaid'),
+                        'other'  => __('hr.leave_requests.types.other'),
+                        default  => (string) $state,
                     })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
-                    ->label('الحالة')
+                    ->label(__('hr.leave_requests.fields.status'))
                     ->badge()
-                    ->formatStateUsing(fn(string $state) => match ($state) {
-                        'pending' => 'معلّقة',
-                        'approved' => 'مقبولة',
-                        default => 'مرفوضة',
+                    ->formatStateUsing(fn(?string $state) => match ($state) {
+                        'pending'  => __('hr.leave_requests.statuses.pending'),
+                        'approved' => __('hr.leave_requests.statuses.approved'),
+                        'rejected' => __('hr.leave_requests.statuses.rejected'),
+                        default    => (string) $state,
                     })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('start_date')
-                    ->label('من')
+                    ->label(__('hr.leave_requests.columns.from'))
                     ->date()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('end_date')
-                    ->label('إلى')
+                    ->label(__('hr.leave_requests.columns.to'))
                     ->date()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('reason')
-                    ->label('ملاحظات')
+                    ->label(__('hr.leave_requests.fields.notes_short'))
                     ->limit(40)
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -119,12 +142,12 @@ class LeaveRequestResource extends Resource
                 Tables\Actions\EditAction::make(),
 
                 Tables\Actions\Action::make('approve')
-                    ->label('موافقة')
+                    ->label(__('hr.leave_requests.actions.approve'))
                     ->color('success')
                     ->icon('heroicon-o-check-circle')
                     ->visible(function (LeaveRequest $record) {
                         /** @var \App\Models\User|null $user */
-                        $user = \Illuminate\Support\Facades\Auth::user();
+                        $user = Auth::user();
 
                         return $record->status === 'pending'
                             && (bool) (
@@ -136,12 +159,12 @@ class LeaveRequestResource extends Resource
                     ->action(fn(LeaveRequest $record) => $record->update(['status' => 'approved'])),
 
                 Tables\Actions\Action::make('reject')
-                    ->label('رفض')
+                    ->label(__('hr.leave_requests.actions.reject'))
                     ->color('danger')
                     ->icon('heroicon-o-x-circle')
                     ->visible(function (LeaveRequest $record) {
                         /** @var \App\Models\User|null $user */
-                        $user = \Illuminate\Support\Facades\Auth::user();
+                        $user = Auth::user();
 
                         return $record->status === 'pending'
                             && (bool) (
@@ -151,7 +174,7 @@ class LeaveRequestResource extends Resource
                     })
                     ->form([
                         Forms\Components\Textarea::make('reject_reason')
-                            ->label('سبب الرفض (اختياري)')
+                            ->label(__('hr.leave_requests.fields.reject_reason'))
                             ->rows(3),
                     ])
                     ->requiresConfirmation()
@@ -159,7 +182,12 @@ class LeaveRequestResource extends Resource
                         $newReason = $record->reason;
 
                         if (! empty($data['reject_reason'])) {
-                            $newReason = trim(($record->reason ? $record->reason . "\n\n" : '') . 'سبب الرفض: ' . $data['reject_reason']);
+                            $newReason = trim(
+                                ($record->reason ? $record->reason . "\n\n" : '')
+                                    . __('hr.leave_requests.text.reject_reason_prefix')
+                                    . ' '
+                                    . $data['reject_reason']
+                            );
                         }
 
                         $record->update([
@@ -173,10 +201,8 @@ class LeaveRequestResource extends Resource
             ]);
     }
 
-
     public static function getEloquentQuery(): Builder
     {
-        // للتأكيد: حصر النتائج على Tenant الحالي حتى لو تغيّرت إعدادات panel
         $tenantId = Filament::getTenant()?->getKey();
 
         return parent::getEloquentQuery()
@@ -203,6 +229,7 @@ class LeaveRequestResource extends Resource
             'edit' => Pages\EditLeaveRequest::route('/{record}/edit'),
         ];
     }
+
     public static function shouldRegisterNavigation(): bool
     {
         /** @var \App\Models\User|null $user */

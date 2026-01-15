@@ -17,68 +17,89 @@ class EmployeeResource extends Resource
 {
     protected static ?string $model = Employee::class;
 
-    protected static ?string $navigationGroup = 'HR';
     protected static ?int $navigationSort = 10;
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
-    protected static ?string $navigationLabel = 'Employees';
 
     // Tenancy
     protected static ?string $tenantOwnershipRelationshipName = 'tenant';
     protected static ?string $tenantRelationshipName = 'employees';
 
+    /**
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('hr.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('hr.employees.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('hr.employees.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('hr.employees.plural');
+    }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('بيانات الموظف')
+            Forms\Components\Section::make(__('hr.employees.sections.employee_data'))
                 ->schema([
                     Forms\Components\TextInput::make('employee_code')
-                        ->label('الرقم الوظيفي')
+                        ->label(__('hr.employees.fields.employee_code'))
                         ->maxLength(50)
                         ->unique(ignoreRecord: true),
 
                     Forms\Components\TextInput::make('full_name')
-                        ->label('الاسم الكامل')
+                        ->label(__('hr.employees.fields.full_name'))
                         ->required()
                         ->maxLength(255),
 
                     Forms\Components\TextInput::make('email')
-                        ->label('البريد الإلكتروني')
+                        ->label(__('hr.employees.fields.email'))
                         ->email()
                         ->maxLength(255),
 
                     Forms\Components\TextInput::make('phone')
-                        ->label('رقم الهاتف')
+                        ->label(__('hr.employees.fields.phone'))
                         ->maxLength(50),
                 ])
                 ->columns(2),
 
-            Forms\Components\Section::make('الوظيفة والراتب')
+            Forms\Components\Section::make(__('hr.employees.sections.job_salary'))
                 ->schema([
                     Forms\Components\Select::make('department_id')
-                        ->label('القسم')
+                        ->label(__('hr.employees.fields.department'))
                         ->relationship('department', 'name')
                         ->searchable()
                         ->preload(),
 
                     Forms\Components\Select::make('job_title_id')
-                        ->label('المسمى الوظيفي')
+                        ->label(__('hr.employees.fields.job_title'))
                         ->relationship('jobTitle', 'name')
                         ->searchable()
                         ->preload(),
 
                     Forms\Components\DatePicker::make('hire_date')
-                        ->label('تاريخ التوظيف'),
+                        ->label(__('hr.employees.fields.hire_date')),
 
                     Forms\Components\TextInput::make('basic_salary')
-                        ->label('الراتب الأساسي')
+                        ->label(__('hr.employees.fields.basic_salary'))
                         ->numeric()
-                        ->prefix('EGP')
+                        ->prefix(__('common.currency_egp'))
                         ->minValue(0),
                 ])
                 ->columns(2),
 
             Forms\Components\Toggle::make('is_active')
-                ->label('فعال')
+                ->label(__('common.active'))
                 ->default(true),
         ]);
     }
@@ -88,48 +109,50 @@ class EmployeeResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('employee_code')
-                    ->label('رقم')
+                    ->label(__('hr.employees.columns.code_short'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label('الاسم')
+                    ->label(__('hr.employees.columns.name_short'))
                     ->searchable()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('department.name')
-                    ->label('القسم')
+                    ->label(__('hr.employees.fields.department'))
                     ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('jobTitle.name')
-                    ->label('المسمى')
+                    ->label(__('hr.employees.fields.job_title'))
                     ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\IconColumn::make('is_active')
-                    ->label('فعال')
+                    ->label(__('common.active'))
                     ->boolean(),
 
                 Tables\Columns\TextColumn::make('hire_date')
-                    ->label('تاريخ التوظيف')
+                    ->label(__('hr.employees.fields.hire_date'))
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('أُنشئ')
+                    ->label(__('common.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')->label('فعال'),
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label(__('common.active')),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
+
                 Tables\Actions\Action::make('clock_in')
-                    ->label('Clock In')
+                    ->label(__('hr.employees.actions.clock_in'))
                     ->icon('heroicon-o-play')
                     ->color('success')
                     ->requiresConfirmation()
@@ -146,7 +169,7 @@ class EmployeeResource extends Resource
 
                         if ($attendance && $attendance->check_in) {
                             \Filament\Notifications\Notification::make()
-                                ->title('تم تسجيل الدخول مسبقًا اليوم')
+                                ->title(__('hr.employees.notifications.clock_in_already'))
                                 ->warning()
                                 ->send();
                             return;
@@ -164,13 +187,13 @@ class EmployeeResource extends Resource
                         }
 
                         \Filament\Notifications\Notification::make()
-                            ->title('تم تسجيل Clock In')
+                            ->title(__('hr.employees.notifications.clock_in_done'))
                             ->success()
                             ->send();
                     }),
 
                 Tables\Actions\Action::make('clock_out')
-                    ->label('Clock Out')
+                    ->label(__('hr.employees.actions.clock_out'))
                     ->icon('heroicon-o-stop')
                     ->color('danger')
                     ->requiresConfirmation()
@@ -187,7 +210,7 @@ class EmployeeResource extends Resource
 
                         if (! $attendance || ! $attendance->check_in) {
                             \Filament\Notifications\Notification::make()
-                                ->title('لا يوجد Clock In لهذا اليوم')
+                                ->title(__('hr.employees.notifications.no_clock_in_today'))
                                 ->warning()
                                 ->send();
                             return;
@@ -195,7 +218,7 @@ class EmployeeResource extends Resource
 
                         if ($attendance->check_out) {
                             \Filament\Notifications\Notification::make()
-                                ->title('تم تسجيل الخروج مسبقًا اليوم')
+                                ->title(__('hr.employees.notifications.clock_out_already'))
                                 ->warning()
                                 ->send();
                             return;
@@ -204,7 +227,7 @@ class EmployeeResource extends Resource
                         $attendance->update(['check_out' => $nowTime]);
 
                         \Filament\Notifications\Notification::make()
-                            ->title('تم تسجيل Clock Out')
+                            ->title(__('hr.employees.notifications.clock_out_done'))
                             ->success()
                             ->send();
                     }),
@@ -212,7 +235,6 @@ class EmployeeResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);
@@ -247,6 +269,7 @@ class EmployeeResource extends Resource
             'edit' => Pages\EditEmployee::route('/{record}/edit'),
         ];
     }
+
     public static function shouldRegisterNavigation(): bool
     {
         /** @var \App\Models\User|null $user */

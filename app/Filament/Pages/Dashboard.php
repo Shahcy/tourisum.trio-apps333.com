@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Concerns\TranslatesPageAttributes;
 use App\Filament\Widgets\AdminStats;
 use App\Filament\Widgets\AlertsList;
 use App\Filament\Widgets\BookingsStatusChart;
@@ -10,12 +11,10 @@ use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    use TranslatesPageAttributes;
 
-    public function getTitle(): string
-    {
-        return 'لوحة التحكم';
-    }
+    protected static ?string $title = 'Dashboard';
+    protected static ?string $navigationIcon = 'heroicon-o-home';
 
     protected function getWidgetsColumns(): int | array
     {

@@ -12,7 +12,7 @@ class AlertsList extends BaseWidget
 {
     protected static bool $isLazy = true;
 
-    protected static ?string $heading = 'تنبيهات التحصيل (فواتير متأخرة)';
+    protected static ?string $heading = 'Overdue Invoices (requires due date)';
 
     protected int | string | array $columnSpan = 'full';
 
@@ -23,7 +23,7 @@ class AlertsList extends BaseWidget
         return $table
             ->query(
                 Invoice::query()
-                    ->with(['customer:id,full_name'])   // مهم جداً لتسريع
+                    ->with(['customer:id,full_name'])
                     ->select([
                         'id',
                         'tenant_id',
@@ -43,34 +43,34 @@ class AlertsList extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('number')
-                    ->label('رقم الفاتورة')
+                    ->label(__('Invoice Number'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('customer.full_name')
-                    ->label('العميل')
+                    ->label(__('Customer'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('due_date')
-                    ->label('تاريخ الاستحقاق')
+                    ->label(__('Due Date'))
                     ->date()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('total')
-                    ->label('الإجمالي')
+                    ->label(__('Total'))
                     ->numeric()
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('paid_amount')
-                    ->label('المدفوع')
+                    ->label(__('Paid Amount'))
                     ->numeric(),
 
                 Tables\Columns\TextColumn::make('remaining')
-                    ->label('المتبقي')
+                    ->label(__('Remaining'))
                     ->numeric(),
             ])
             ->actions([
                 Tables\Actions\Action::make('open')
-                    ->label('فتح')
+                    ->label(__('Open'))
                     ->url(fn(Invoice $record) => route('filament.admin.resources.invoices.edit', [
                         'tenant' => (Filament::getTenant()?->getKey() ?? Filament::auth()->user()->tenant_id),
                         'record' => $record,
@@ -78,6 +78,11 @@ class AlertsList extends BaseWidget
                     ->openUrlInNewTab(),
             ])
             ->defaultPaginationPageOption(5)
-            ->paginated([5]); // خفف الخيارات لتقليل الحمل
+            ->paginated([5]);
+    }
+
+    protected function getHeading(): string
+    {
+        return __('Overdue Invoices (requires due date)');
     }
 }

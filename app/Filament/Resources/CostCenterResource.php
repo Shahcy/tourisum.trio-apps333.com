@@ -15,37 +15,58 @@ class CostCenterResource extends Resource
     protected static ?string $model = CostCenter::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?string $navigationGroup = 'المحاسبة';
-    protected static ?string $navigationLabel = 'مراكز التكلفة';
+
+    /**
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('accounting.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('accounting.cost_centers.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('accounting.cost_centers.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('accounting.cost_centers.plural');
+    }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Select::make('type')
-                ->label('النوع')
+                ->label(__('accounting.cost_centers.fields.type'))
                 ->required()
                 ->options([
-                    'department' => 'قسم',
-                    'employee' => 'موظف',
+                    'department' => __('accounting.cost_centers.types.department'),
+                    'employee'   => __('accounting.cost_centers.types.employee'),
                 ]),
 
             Forms\Components\TextInput::make('name')
-                ->label('الاسم')
+                ->label(__('accounting.cost_centers.fields.name'))
                 ->required()
                 ->maxLength(255),
 
             Forms\Components\TextInput::make('department_id')
-                ->label('Department ID (اختياري)')
+                ->label(__('accounting.cost_centers.fields.department_id'))
                 ->numeric()
                 ->nullable(),
 
             Forms\Components\TextInput::make('employee_id')
-                ->label('Employee ID (اختياري)')
+                ->label(__('accounting.cost_centers.fields.employee_id'))
                 ->numeric()
                 ->nullable(),
 
             Forms\Components\Toggle::make('is_active')
-                ->label('مفعّل')
+                ->label(__('accounting.cost_centers.fields.is_active'))
                 ->default(true),
         ]);
     }
@@ -55,14 +76,31 @@ class CostCenterResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('type')
-                    ->label('النوع')
+                    ->label(__('accounting.cost_centers.fields.type'))
                     ->badge()
-                    ->formatStateUsing(fn(string $state) => $state === 'department' ? 'قسم' : 'موظف')
+                    ->formatStateUsing(fn(?string $state) => match ($state) {
+                        'department' => __('accounting.cost_centers.types.department'),
+                        'employee'   => __('accounting.cost_centers.types.employee'),
+                        default      => (string) $state,
+                    })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('name')->label('الاسم')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('department_id')->label('Department ID')->toggleable(),
-                Tables\Columns\TextColumn::make('employee_id')->label('Employee ID')->toggleable(),
-                Tables\Columns\IconColumn::make('is_active')->label('مفعّل')->boolean(),
+
+                Tables\Columns\TextColumn::make('name')
+                    ->label(__('accounting.cost_centers.fields.name'))
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('department_id')
+                    ->label(__('accounting.cost_centers.fields.department_id_short'))
+                    ->toggleable(),
+
+                Tables\Columns\TextColumn::make('employee_id')
+                    ->label(__('accounting.cost_centers.fields.employee_id_short'))
+                    ->toggleable(),
+
+                Tables\Columns\IconColumn::make('is_active')
+                    ->label(__('accounting.cost_centers.fields.is_active'))
+                    ->boolean(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

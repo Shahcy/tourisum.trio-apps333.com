@@ -17,13 +17,32 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'CRM';
-    protected static ?string $navigationLabel = 'العملاء';
-    protected static ?string $modelLabel = 'عميل';
-    protected static ?string $pluralModelLabel = 'العملاء';
 
     /**
-     * SaaS: فلترة كل الاستعلامات حسب tenant الحالي
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('crm.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('crm.customers.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('crm.customers.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('crm.customers.plural');
+    }
+
+    /**
+     * SaaS: Filter all queries by current tenant
      */
     public static function getEloquentQuery(): Builder
     {
@@ -37,62 +56,62 @@ class CustomerResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('بيانات العميل')
+                Forms\Components\Section::make(__('crm.customers.sections.customer_data'))
                     ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('full_name')
-                            ->label('الاسم الكامل')
+                            ->label(__('crm.customers.fields.full_name'))
                             ->required()
                             ->maxLength(255),
 
                         Forms\Components\Select::make('status')
-                            ->label('الحالة')
+                            ->label(__('crm.customers.fields.status'))
                             ->options([
-                                'new' => 'New',
-                                'lead' => 'Lead',
-                                'interested' => 'Interested',
-                                'booked' => 'Booked',
-                                'lost' => 'Lost',
+                                'new'        => __('crm.customers.statuses.new'),
+                                'lead'       => __('crm.customers.statuses.lead'),
+                                'interested' => __('crm.customers.statuses.interested'),
+                                'booked'     => __('crm.customers.statuses.booked'),
+                                'lost'       => __('crm.customers.statuses.lost'),
                             ])
                             ->required()
                             ->default('new'),
 
                         Forms\Components\TextInput::make('phone')
-                            ->label('رقم الهاتف')
+                            ->label(__('crm.customers.fields.phone'))
                             ->tel()
                             ->maxLength(50),
 
                         Forms\Components\TextInput::make('email')
-                            ->label('البريد الإلكتروني')
+                            ->label(__('crm.customers.fields.email'))
                             ->email()
                             ->maxLength(255),
 
                         Forms\Components\TextInput::make('nationality')
-                            ->label('الجنسية')
+                            ->label(__('crm.customers.fields.nationality'))
                             ->maxLength(100),
 
                         Forms\Components\Textarea::make('notes')
-                            ->label('ملاحظات')
+                            ->label(__('crm.customers.fields.notes'))
                             ->rows(4)
                             ->columnSpanFull(),
                     ]),
 
-                Forms\Components\Section::make('الجواز والتأشيرة')
+                Forms\Components\Section::make(__('crm.customers.sections.passport_visa'))
                     ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('passport_number')
-                            ->label('رقم الجواز')
+                            ->label(__('crm.customers.fields.passport_number'))
                             ->maxLength(100),
 
                         Forms\Components\DatePicker::make('passport_expiry')
-                            ->label('تاريخ انتهاء الجواز'),
+                            ->label(__('crm.customers.fields.passport_expiry')),
 
                         Forms\Components\TextInput::make('visa_type')
-                            ->label('نوع التأشيرة')
+                            ->label(__('crm.customers.fields.visa_type'))
                             ->maxLength(100),
 
                         Forms\Components\DatePicker::make('visa_expiry')
-                            ->label('تاريخ انتهاء التأشيرة'),
+                            ->label(__('crm.customers.fields.visa_expiry')),
                     ]),
             ]);
     }
@@ -103,43 +122,43 @@ class CustomerResource extends Resource
             ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label('الاسم')
+                    ->label(__('crm.customers.fields.name_short'))
                     ->searchable()
                     ->sortable()
                     ->limit(30),
 
                 Tables\Columns\TextColumn::make('phone')
-                    ->label('الهاتف')
+                    ->label(__('crm.customers.fields.phone'))
                     ->searchable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('email')
-                    ->label('الإيميل')
+                    ->label(__('crm.customers.fields.email'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('status')
-                    ->label('الحالة')
+                    ->label(__('crm.customers.fields.status'))
                     ->badge()
                     ->colors([
-                        'gray' => 'new',
+                        'gray'    => 'new',
                         'warning' => 'lead',
-                        'info' => 'interested',
+                        'info'    => 'interested',
                         'success' => 'booked',
-                        'danger' => 'lost',
+                        'danger'  => 'lost',
                     ])
                     ->formatStateUsing(fn(?string $state) => match ($state) {
-                        'new' => 'New',
-                        'lead' => 'Lead',
-                        'interested' => 'Interested',
-                        'booked' => 'Booked',
-                        'lost' => 'Lost',
-                        default => $state,
+                        'new'        => __('crm.customers.statuses.new'),
+                        'lead'       => __('crm.customers.statuses.lead'),
+                        'interested' => __('crm.customers.statuses.interested'),
+                        'booked'     => __('crm.customers.statuses.booked'),
+                        'lost'       => __('crm.customers.statuses.lost'),
+                        default      => (string) $state,
                     })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('passport_expiry')
-                    ->label('انتهاء الجواز')
+                    ->label(__('crm.customers.fields.passport_expiry_short'))
                     ->date()
                     ->sortable()
                     ->toggleable()
@@ -147,7 +166,7 @@ class CustomerResource extends Resource
                     ->description(fn($record) => self::expiryText($record->passport_expiry)),
 
                 Tables\Columns\TextColumn::make('visa_expiry')
-                    ->label('انتهاء التأشيرة')
+                    ->label(__('crm.customers.fields.visa_expiry_short'))
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true)
@@ -155,30 +174,30 @@ class CustomerResource extends Resource
                     ->description(fn($record) => self::expiryText($record->visa_expiry)),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('common.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label(__('crm.customers.fields.status'))
                     ->options([
-                        'new' => 'New',
-                        'lead' => 'Lead',
-                        'interested' => 'Interested',
-                        'booked' => 'Booked',
-                        'lost' => 'Lost',
+                        'new'        => __('crm.customers.statuses.new'),
+                        'lead'       => __('crm.customers.statuses.lead'),
+                        'interested' => __('crm.customers.statuses.interested'),
+                        'booked'     => __('crm.customers.statuses.booked'),
+                        'lost'       => __('crm.customers.statuses.lost'),
                     ]),
 
                 Tables\Filters\Filter::make('passport_expired')
-                    ->label('الجواز منتهي')
+                    ->label(__('crm.customers.filters.passport_expired'))
                     ->query(fn(Builder $query) => $query
                         ->whereNotNull('passport_expiry')
                         ->whereDate('passport_expiry', '<', now()->toDateString())),
 
                 Tables\Filters\Filter::make('passport_expiring_30')
-                    ->label('الجواز سينتهي خلال 30 يوم')
+                    ->label(__('crm.customers.filters.passport_expiring_30'))
                     ->query(fn(Builder $query) => $query
                         ->whereNotNull('passport_expiry')
                         ->whereBetween('passport_expiry', [
@@ -208,27 +227,42 @@ class CustomerResource extends Resource
 
     protected static function expiryColor($date): ?string
     {
-        if (!$date) return null;
+        if (!$date) {
+            return null;
+        }
 
         $d = \Illuminate\Support\Carbon::parse($date)->startOfDay();
         $today = now()->startOfDay();
 
-        if ($d->lt($today)) return 'danger';
-        if ($d->lte($today->copy()->addDays(30))) return 'warning';
+        if ($d->lt($today)) {
+            return 'danger';
+        }
+
+        if ($d->lte($today->copy()->addDays(30))) {
+            return 'warning';
+        }
+
         return 'success';
     }
 
     protected static function expiryText($date): ?string
     {
-        if (!$date) return null;
+        if (!$date) {
+            return null;
+        }
 
         $d = \Illuminate\Support\Carbon::parse($date)->startOfDay();
         $today = now()->startOfDay();
 
-        if ($d->lt($today)) return 'منتهي';
+        if ($d->lt($today)) {
+            return __('crm.customers.expiry.expired');
+        }
 
         $days = $today->diffInDays($d);
-        if ($days <= 30) return "متبقي {$days} يوم";
+
+        if ($days <= 30) {
+            return __('crm.customers.expiry.remaining_days', ['days' => $days]);
+        }
 
         return null;
     }

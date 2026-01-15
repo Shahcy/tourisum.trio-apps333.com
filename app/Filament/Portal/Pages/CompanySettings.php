@@ -2,6 +2,7 @@
 
 namespace App\Filament\Portal\Pages;
 
+use App\Filament\Pages\Concerns\TranslatesPageAttributes;
 use App\Models\Tenant;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\ColorPicker;
@@ -14,10 +15,11 @@ use Filament\Pages\Page;
 class CompanySettings extends Page implements HasForms
 {
     use InteractsWithForms;
+    use TranslatesPageAttributes;
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'Company settings';
-    protected static ?string $title = 'Company settings';
+    protected static ?string $navigationLabel = 'Company Settings';
+    protected static ?string $title = 'Company Settings';
     protected static ?int $navigationSort = 99;
 
     protected static string $view = 'filament.portal.pages.company-settings';

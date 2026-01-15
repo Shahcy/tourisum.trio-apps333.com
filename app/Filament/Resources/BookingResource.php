@@ -18,10 +18,29 @@ class BookingResource extends Resource
     protected static ?string $model = Booking::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
-    protected static ?string $navigationGroup = 'Bookings';
-    protected static ?string $navigationLabel = 'الحجوزات';
-    protected static ?string $modelLabel = 'حجز';
-    protected static ?string $pluralModelLabel = 'الحجوزات';
+
+    /**
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('bookings.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('bookings.booking.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('bookings.booking.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('bookings.booking.plural');
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -34,11 +53,11 @@ class BookingResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('بيانات الحجز')
+            Forms\Components\Section::make(__('bookings.booking.sections.booking_data'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\Select::make('customer_id')
-                        ->label('العميل')
+                        ->label(__('bookings.booking.fields.customer'))
                         ->required()
                         ->searchable()
                         ->preload()
@@ -53,71 +72,71 @@ class BookingResource extends Resource
                         }),
 
                     Forms\Components\Select::make('type')
-                        ->label('نوع الحجز')
+                        ->label(__('bookings.booking.fields.type'))
                         ->required()
                         ->options([
-                            'flight' => 'Flight',
-                            'hotel' => 'Hotel',
-                            'tour' => 'Tour',
-                            'transport' => 'Transport',
-                            'group' => 'Group Travel',
+                            'flight'    => __('bookings.booking.types.flight'),
+                            'hotel'     => __('bookings.booking.types.hotel'),
+                            'tour'      => __('bookings.booking.types.tour'),
+                            'transport' => __('bookings.booking.types.transport'),
+                            'group'     => __('bookings.booking.types.group_travel'),
                         ]),
 
                     Forms\Components\TextInput::make('reference')
-                        ->label('Reference')
+                        ->label(__('bookings.booking.fields.reference'))
                         ->maxLength(255),
 
                     Forms\Components\TextInput::make('destination')
-                        ->label('الوجهة')
+                        ->label(__('bookings.booking.fields.destination'))
                         ->maxLength(255),
 
                     Forms\Components\DatePicker::make('start_date')
-                        ->label('تاريخ البداية'),
+                        ->label(__('bookings.booking.fields.start_date')),
 
                     Forms\Components\DatePicker::make('end_date')
-                        ->label('تاريخ النهاية'),
+                        ->label(__('bookings.booking.fields.end_date')),
 
                     Forms\Components\TextInput::make('adults')
-                        ->label('Adults')
+                        ->label(__('bookings.booking.fields.adults'))
                         ->numeric()
                         ->minValue(1)
                         ->default(1),
 
                     Forms\Components\TextInput::make('children')
-                        ->label('Children')
+                        ->label(__('bookings.booking.fields.children'))
                         ->numeric()
                         ->minValue(0)
                         ->default(0),
 
                     Forms\Components\Select::make('status')
-                        ->label('حالة الحجز')
+                        ->label(__('bookings.booking.fields.status'))
                         ->required()
                         ->default('draft')
                         ->options([
-                            'draft' => 'Draft',
-                            'confirmed' => 'Confirmed',
-                            'cancelled' => 'Cancelled',
-                            'completed' => 'Completed',
+                            'draft'     => __('bookings.booking.statuses.draft'),
+                            'confirmed' => __('bookings.booking.statuses.confirmed'),
+                            'cancelled' => __('bookings.booking.statuses.cancelled'),
+                            'completed' => __('bookings.booking.statuses.completed'),
                         ]),
                 ]),
 
-            Forms\Components\Section::make('المدفوعات')
+            Forms\Components\Section::make(__('bookings.booking.sections.payments'))
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('total_amount')
-                        ->label('الإجمالي')
+                        ->label(__('bookings.booking.fields.total_amount'))
                         ->numeric()
                         ->default(0)
                         ->prefix('$'),
 
                     Forms\Components\TextInput::make('paid_amount')
-                        ->label('المدفوع')
+                        ->label(__('bookings.booking.fields.paid_amount'))
                         ->numeric()
                         ->default(0)
                         ->prefix('$'),
 
                     Forms\Components\Placeholder::make('remaining_amount')
-                        ->label('المتبقي')
+                        ->label(__('bookings.booking.fields.remaining_amount'))
                         ->content(function (?Booking $record, callable $get) {
                             $total = (float) ($record?->total_amount ?? $get('total_amount') ?? 0);
                             $paid  = (float) ($record?->paid_amount ?? $get('paid_amount') ?? 0);
@@ -127,17 +146,17 @@ class BookingResource extends Resource
                         }),
                 ]),
 
-            Forms\Components\Section::make('ملفات وملاحظات')
+            Forms\Components\Section::make(__('bookings.booking.sections.files_notes'))
                 ->schema([
                     Forms\Components\FileUpload::make('voucher_path')
-                        ->label('Voucher / PDF')
+                        ->label(__('bookings.booking.fields.voucher'))
                         ->disk('public')
                         ->directory('vouchers')
                         ->preserveFilenames()
                         ->downloadable(),
 
                     Forms\Components\Textarea::make('notes')
-                        ->label('ملاحظات')
+                        ->label(__('bookings.booking.fields.notes'))
                         ->rows(4),
                 ]),
         ]);
@@ -149,90 +168,90 @@ class BookingResource extends Resource
             ->defaultSort('id', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('customer.full_name')
-                    ->label('العميل')
+                    ->label(__('bookings.booking.fields.customer'))
                     ->searchable()
                     ->sortable()
                     ->limit(25),
 
                 Tables\Columns\TextColumn::make('type')
-                    ->label('النوع')
+                    ->label(__('bookings.booking.fields.type'))
                     ->badge()
                     ->formatStateUsing(fn(?string $state) => match ($state) {
-                        'flight' => 'Flight',
-                        'hotel' => 'Hotel',
-                        'tour' => 'Tour',
-                        'transport' => 'Transport',
-                        'group' => 'Group',
-                        default => $state,
+                        'flight'    => __('bookings.booking.types.flight'),
+                        'hotel'     => __('bookings.booking.types.hotel'),
+                        'tour'      => __('bookings.booking.types.tour'),
+                        'transport' => __('bookings.booking.types.transport'),
+                        'group'     => __('bookings.booking.types.group'),
+                        default     => (string) $state,
                     })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('status')
-                    ->label('الحالة')
+                    ->label(__('bookings.booking.fields.status'))
                     ->badge()
                     ->colors([
-                        'gray' => 'draft',
+                        'gray'    => 'draft',
                         'success' => 'confirmed',
-                        'danger' => 'cancelled',
-                        'info' => 'completed',
+                        'danger'  => 'cancelled',
+                        'info'    => 'completed',
                     ])
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('start_date')
-                    ->label('البداية')
+                    ->label(__('bookings.booking.fields.start_date_short'))
                     ->date()
                     ->sortable()
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('end_date')
-                    ->label('النهاية')
+                    ->label(__('bookings.booking.fields.end_date_short'))
                     ->date()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('total_amount')
-                    ->label('الإجمالي')
+                    ->label(__('bookings.booking.fields.total_amount'))
                     ->money('USD')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('paid_amount')
-                    ->label('المدفوع')
+                    ->label(__('bookings.booking.fields.paid_amount'))
                     ->money('USD')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('remaining_calc')
-                    ->label('المتبقي')
+                    ->label(__('bookings.booking.fields.remaining_amount'))
                     ->state(fn(Booking $record) => max(((float) $record->total_amount) - ((float) $record->paid_amount), 0))
                     ->money('USD'),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('تاريخ الإضافة')
+                    ->label(__('common.created_at'))
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
-                    ->label('النوع')
+                    ->label(__('bookings.booking.fields.type'))
                     ->options([
-                        'flight' => 'Flight',
-                        'hotel' => 'Hotel',
-                        'tour' => 'Tour',
-                        'transport' => 'Transport',
-                        'group' => 'Group Travel',
+                        'flight'    => __('bookings.booking.types.flight'),
+                        'hotel'     => __('bookings.booking.types.hotel'),
+                        'tour'      => __('bookings.booking.types.tour'),
+                        'transport' => __('bookings.booking.types.transport'),
+                        'group'     => __('bookings.booking.types.group_travel'),
                     ]),
 
                 Tables\Filters\SelectFilter::make('status')
-                    ->label('الحالة')
+                    ->label(__('bookings.booking.fields.status'))
                     ->options([
-                        'draft' => 'Draft',
-                        'confirmed' => 'Confirmed',
-                        'cancelled' => 'Cancelled',
-                        'completed' => 'Completed',
+                        'draft'     => __('bookings.booking.statuses.draft'),
+                        'confirmed' => __('bookings.booking.statuses.confirmed'),
+                        'cancelled' => __('bookings.booking.statuses.cancelled'),
+                        'completed' => __('bookings.booking.statuses.completed'),
                     ]),
 
                 Tables\Filters\Filter::make('has_remaining')
-                    ->label('عليه متبقي')
+                    ->label(__('bookings.booking.filters.has_remaining'))
                     ->query(fn(Builder $query) => $query->whereColumn('paid_amount', '<', 'total_amount')),
             ])
             ->actions([

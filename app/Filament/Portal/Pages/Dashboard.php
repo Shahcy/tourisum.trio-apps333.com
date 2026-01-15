@@ -2,17 +2,17 @@
 
 namespace App\Filament\Portal\Pages;
 
+use App\Filament\Pages\Concerns\TranslatesPageAttributes;
 use Filament\Pages\Dashboard as BaseDashboard;
 
 class Dashboard extends BaseDashboard
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    use TranslatesPageAttributes;
 
-    protected static ?string $title = 'Dashboard';
-
-    protected static ?string $navigationLabel = 'Dashboard';
-
+    protected static ?string $title = 'Portal Dashboard';
+    protected static ?string $navigationLabel = 'Portal Dashboard';
     protected static ?int $navigationSort = 1;
+    protected static ?string $navigationIcon = 'heroicon-o-home';
 
     public function getColumns(): int | string | array
     {

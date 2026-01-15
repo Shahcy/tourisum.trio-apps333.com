@@ -17,48 +17,99 @@ class InvoiceResource extends Resource
 {
     protected static ?string $model = Invoice::class;
 
-    protected static ?string $navigationGroup = 'Finance';
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationLabel = 'الفواتير';
+
+    /**
+     * Avoid hardcoded strings so locale switching works properly.
+     */
+    public static function getNavigationGroup(): ?string
+    {
+        return __('finance.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('finance.invoices.navigation');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('finance.invoices.model');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('finance.invoices.plural');
+    }
 
     public static function getEloquentQuery(): Builder
     {
         $user = Filament::auth()->user();
-        return parent::getEloquentQuery()->where('tenant_id', $user->tenant_id);
+
+        return parent::getEloquentQuery()
+            ->where('tenant_id', $user->tenant_id);
     }
 
     public static function form(Form $form): Form
     {
         return $form->schema([
             Forms\Components\Select::make('customer_id')
-                ->label('العميل')
+                ->label(__('finance.invoices.fields.customer'))
                 ->required()
+                ->searchable()
+                ->preload()
                 ->options(
-                    Customer::where('tenant_id', Filament::auth()->user()->tenant_id)
+                    Customer::query()
+                        ->where('tenant_id', Filament::auth()->user()->tenant_id)
+                        ->orderBy('full_name')
                         ->pluck('full_name', 'id')
                 ),
 
             Forms\Components\Repeater::make('items')
+                ->label(__('finance.invoices.fields.items'))
                 ->relationship()
                 ->schema([
-                    Forms\Components\TextInput::make('title')->required(),
-                    Forms\Components\TextInput::make('qty')->numeric()->default(1),
-                    Forms\Components\TextInput::make('unit_price')->numeric()->default(0),
+                    Forms\Components\TextInput::make('title')
+                        ->label(__('finance.invoices.items.title'))
+                        ->required(),
+
+                    Forms\Components\TextInput::make('qty')
+                        ->label(__('finance.invoices.items.qty'))
+                        ->numeric()
+                        ->default(1),
+
+                    Forms\Components\TextInput::make('unit_price')
+                        ->label(__('finance.invoices.items.unit_price'))
+                        ->numeric()
+                        ->default(0),
                 ])
                 ->columns(3),
 
-            Forms\Components\Textarea::make('notes'),
+            Forms\Components\Textarea::make('notes')
+                ->label(__('finance.invoices.fields.notes')),
         ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('number'),
-            Tables\Columns\TextColumn::make('customer.full_name'),
-            Tables\Columns\TextColumn::make('total')->money('USD'),
-            Tables\Columns\TextColumn::make('paid_amount')->money('USD'),
-            Tables\Columns\TextColumn::make('remaining')->money('USD'),
+            Tables\Columns\TextColumn::make('number')
+                ->label(__('finance.invoices.fields.number')),
+
+            Tables\Columns\TextColumn::make('customer.full_name')
+                ->label(__('finance.invoices.fields.customer')),
+
+            Tables\Columns\TextColumn::make('total')
+                ->label(__('finance.invoices.fields.total'))
+                ->money('USD'),
+
+            Tables\Columns\TextColumn::make('paid_amount')
+                ->label(__('finance.invoices.fields.paid_amount'))
+                ->money('USD'),
+
+            Tables\Columns\TextColumn::make('remaining')
+                ->label(__('finance.invoices.fields.remaining'))
+                ->money('USD'),
         ]);
     }
 
@@ -70,6 +121,7 @@ class InvoiceResource extends Resource
             'edit' => Pages\EditInvoice::route('/{record}/edit'),
         ];
     }
+
     public static function getRelations(): array
     {
         return [

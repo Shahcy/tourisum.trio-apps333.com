@@ -2,22 +2,26 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Concerns\TranslatesPageAttributes;
 use Filament\Forms\Form;
-use Filament\Pages\Page;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
+use Filament\Forms\Components\CheckboxList;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
+use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class ManagePermissions extends Page
 {
+    use TranslatesPageAttributes;
+
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationLabel = 'إدارة الصلاحيات';
-    protected static ?string $navigationGroup = 'الإعدادات';
+    protected static ?string $navigationLabel = 'Manage Permissions';
+    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $title = 'Manage Permissions';
     protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.manage-permissions';
@@ -44,7 +48,7 @@ class ManagePermissions extends Page
             ->statePath('data')
             ->schema([
                 Select::make('role')
-                    ->label('اختر الدور')
+                    ->label('Select role')
                     ->options(Role::query()->orderBy('name')->pluck('name', 'name')->toArray())
                     ->required()
                     ->live()
@@ -52,10 +56,10 @@ class ManagePermissions extends Page
                         $this->loadRolePermissions();
                     }),
 
-                // أزرار Select All / Deselect All
+                // Select All / Deselect All
                 Actions::make([
                     Action::make('selectAll')
-                        ->label('تحديد الكل')
+                        ->label('Select all')
                         ->action(function (): void {
                             $this->data['permissions'] = Permission::query()
                                 ->where('guard_name', 'web')
@@ -68,7 +72,7 @@ class ManagePermissions extends Page
                         }),
 
                     Action::make('deselectAll')
-                        ->label('إلغاء تحديد الكل')
+                        ->label('Deselect all')
                         ->color('gray')
                         ->action(function (): void {
                             $this->data['permissions'] = [];
@@ -77,7 +81,7 @@ class ManagePermissions extends Page
                 ])->columnSpanFull(),
 
                 CheckboxList::make('permissions')
-                    ->label('الصلاحيات')
+                    ->label('Permissions')
                     ->options(
                         Permission::query()
                             ->where('guard_name', 'web')
@@ -140,7 +144,7 @@ class ManagePermissions extends Page
         $role->syncPermissions($selected);
 
         Notification::make()
-            ->title('تم حفظ الصلاحيات بنجاح')
+            ->title('Permissions updated successfully')
             ->success()
             ->send();
 

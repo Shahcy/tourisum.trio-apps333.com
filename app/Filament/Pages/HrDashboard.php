@@ -2,18 +2,19 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Pages\Concerns\TranslatesPageAttributes;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Gate;
-
-
 
 class HrDashboard extends Page
 {
+    use TranslatesPageAttributes;
+
+    protected static ?string $title = 'HR Dashboard';
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'HR';
-    protected static ?string $title = 'الموارد البشرية';
     protected static ?string $navigationGroup = 'HR';
     protected static ?int $navigationSort = 1;
 

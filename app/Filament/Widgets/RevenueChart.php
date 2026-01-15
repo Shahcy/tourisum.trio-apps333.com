@@ -37,7 +37,7 @@ class RevenueChart extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Revenue',
+                    'label' => __('Revenue'),
                     'data' => $data,
                     'tension' => 0.4,
                     'borderWidth' => 3,
@@ -46,8 +46,14 @@ class RevenueChart extends ChartWidget
             'labels' => $labels,
         ];
     }
+
     protected function getType(): string
     {
         return 'line';
+    }
+
+    public function getHeading(): string
+    {
+        return __('Monthly Revenue');
     }
 }

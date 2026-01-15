@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 use App\Http\Middleware\SetLocale;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
-use BezhanSalleh\FilamentShield\Resources\RoleResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -37,23 +36,21 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogo(null)
 
             ->userMenuItems([
-                MenuItem::make('switch_to_ar')
+                \Filament\Navigation\MenuItem::make('switch_to_ar')
                     ->label('العربية')
                     ->url(fn() => route('lang.switch', ['locale' => 'ar']))
-                    ->visible(fn() => App::getLocale() !== 'ar'),
-                MenuItem::make('switch_to_en')
+                    ->visible(fn() => app()->getLocale() !== 'ar'),
+
+                \Filament\Navigation\MenuItem::make('switch_to_en')
                     ->label('English')
                     ->url(fn() => route('lang.switch', ['locale' => 'en']))
-                    ->visible(fn() => App::getLocale() !== 'en'),
+                    ->visible(fn() => app()->getLocale() !== 'en'),
             ])
             ->colors([
                 'primary' => Color::Amber,
             ])
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->resources([
-                RoleResource::class,
-            ])
 
             ->resources([
                 \App\Filament\Resources\TenantResource::class,
