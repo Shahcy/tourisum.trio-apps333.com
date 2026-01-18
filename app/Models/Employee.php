@@ -50,4 +50,9 @@ class Employee extends Model
     {
         return $this->hasMany(LeaveRequest::class);
     }
+
+    public function user()
+    {
+        return $this->belongsTo(\App\Models\User::class);
+    }
 }

@@ -3,8 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UserResource\Pages;
-use App\Models\Tenant;
 use App\Models\User;
+use Filament\Facades\Filament;
 use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -13,8 +13,11 @@ use Filament\Resources\Resource;
 use App\Filament\Resources\Concerns\TranslatesResourceAttributes;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 class UserResource extends Resource
 {
@@ -29,6 +32,10 @@ class UserResource extends Resource
     protected static ?string $pluralModelLabel = 'Users';
     protected static bool $shouldRegisterNavigation = true;
 
+    protected static function isPortalPanel(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'portal';
+    }
 
     public static function form(Forms\Form $form): Forms\Form
     {
@@ -47,22 +54,30 @@ class UserResource extends Resource
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
 
+                    // في Portal: مخفي ومثبت
+                    // في Admin Panel: ظاهر حتى السوبرأدمن يقدر يحدد الشركة
                     Select::make('tenant_id')
                         ->label('Company (Tenant)')
                         ->relationship('tenant', 'name')
                         ->searchable()
                         ->preload()
-                        ->required(),
+                        ->required()
+                        ->visible(fn() => ! static::isPortalPanel())
+                        ->disabled(fn() => static::isPortalPanel()),
 
                     Select::make('roles')
                         ->label('Roles')
                         ->multiple()
-                        ->options(
-                            fn() => Role::query()
-                                ->where('guard_name', 'web')
-                                ->pluck('name', 'name')
-                                ->toArray()
-                        )
+                        ->options(function () {
+                            $q = Role::query()->where('guard_name', 'web');
+
+                            // في Portal: امنع super_admin
+                            if (static::isPortalPanel()) {
+                                $q->where('name', '!=', 'super_admin');
+                            }
+
+                            return $q->pluck('name', 'name')->toArray();
+                        })
                         ->dehydrated(false),
                 ])
                 ->columns(2),
@@ -95,10 +110,25 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
+                // في Portal لا تعرض Company
                 TextColumn::make('tenant.name')
                     ->label('Company')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->visible(function (): bool {
+                        $id = Auth::id();
+                        if (! $id) {
+                            return false;
+                        }
+
+                        return DB::table('model_has_roles')
+                            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                            ->where('model_has_roles.model_type', User::class)
+                            ->where('model_has_roles.model_id', $id)
+                            ->where('roles.name', 'super_admin')
+                            ->exists();
+                    }),
+
 
                 TextColumn::make('roles.name')
                     ->label('Roles')
@@ -121,16 +151,62 @@ class UserResource extends Resource
         ];
     }
 
-    /**
-     * ربط الأدوار عند الحفظ/التحديث
-     */
     public static function mutateFormDataBeforeCreate(array $data): array
     {
+        if (! static::isPortalPanel()) {
+            return $data;
+        }
+
+        /** @var User|null $u */
+        $u = Auth::user();
+
+        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
+
         return $data;
     }
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
+        if (! static::isPortalPanel()) {
+            return $data;
+        }
+
+        /** @var User|null $u */
+        $u = Auth::user();
+
+        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
+
         return $data;
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        $authId = Auth::id();
+
+        $isSuper = $authId
+            ? DB::table('model_has_roles')
+            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+            ->where('model_has_roles.model_type', User::class)
+            ->where('model_has_roles.model_id', $authId)
+            ->where('roles.name', 'super_admin')
+            ->exists()
+            : false;
+
+        // السوبرأدمن يشوف الكل
+        if ($isSuper) {
+            return $query;
+        }
+
+    // أي مستخدم غير سوبرأدمن: يشوف شركته فقط + يخفي super_admin
+        /** @var User|null $u */
+        $u = Auth::user();
+
+        $tenantId = Filament::getTenant()?->id ?? $u?->tenant_id;
+
+        return $query
+            ->where('tenant_id', $tenantId)
+            ->whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'));
     }
 }

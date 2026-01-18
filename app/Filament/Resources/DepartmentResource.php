@@ -8,9 +8,11 @@ use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\Concerns\ScopesToTenant;
 
 class DepartmentResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = Department::class;
 
     // Tenancy

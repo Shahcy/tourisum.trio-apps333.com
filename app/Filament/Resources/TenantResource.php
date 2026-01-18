@@ -18,6 +18,8 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Auth;
+use Filament\Facades\Filament;
 
 class TenantResource extends Resource
 {
@@ -89,6 +91,17 @@ class TenantResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
+                Tables\Actions\Action::make('login_as_admin')
+                    ->label('Login as admin')
+                    ->icon('heroicon-o-arrow-right-on-rectangle')
+                    ->visible(function (): bool {
+                        /** @var User|null $u */
+                        $u = Auth::user();
+
+                        return (bool) $u?->hasRole('super_admin');
+                    })
+                    ->url(fn(Tenant $record) => route('admin.impersonate', ['tenant' => $record->id])),
+
                 Tables\Actions\EditAction::make(),
             ])
             ->defaultSort('id', 'desc');
@@ -101,5 +114,10 @@ class TenantResource extends Resource
             'create' => Pages\CreateTenant::route('/create'),
             'edit'   => Pages\EditTenant::route('/{record}/edit'),
         ];
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return Filament::getCurrentPanel()?->getId() === 'admin';
     }
 }

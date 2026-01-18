@@ -12,9 +12,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\Concerns\ScopesToTenant;
+use Illuminate\Support\Facades\Auth;
 
 class InvoiceResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = Invoice::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
@@ -42,16 +45,9 @@ class InvoiceResource extends Resource
         return __('finance.invoices.plural');
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $user = Filament::auth()->user();
-
-        return parent::getEloquentQuery()
-            ->where('tenant_id', $user->tenant_id);
-    }
-
     public static function form(Form $form): Form
     {
+        $tenantId = Filament::getTenant()?->getKey() ?? Auth::user()?->tenant_id;
         return $form->schema([
             Forms\Components\Select::make('customer_id')
                 ->label(__('finance.invoices.fields.customer'))
@@ -60,7 +56,7 @@ class InvoiceResource extends Resource
                 ->preload()
                 ->options(
                     Customer::query()
-                        ->where('tenant_id', Filament::auth()->user()->tenant_id)
+                        ->where('tenant_id', $tenantId)
                         ->orderBy('full_name')
                         ->pluck('full_name', 'id')
                 ),

@@ -12,9 +12,12 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\Concerns\ScopesToTenant;
+
 
 class AttendanceResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = Attendance::class;
 
     protected static ?int $navigationSort = 20;
@@ -137,21 +140,32 @@ class AttendanceResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $tenantId = Filament::getTenant()?->getKey();
+        $query = parent::getEloquentQuery();
 
-        return parent::getEloquentQuery()
-            ->when($tenantId, fn(Builder $q) => $q->where('tenant_id', $tenantId));
+        if (Filament::getCurrentPanel()?->getId() !== 'portal') {
+            return $query;
+        }
+
+        $tenantId = Filament::getTenant()?->getKey() ?? Auth::user()?->tenant_id;
+
+        return $query->where('tenant_id', $tenantId);
     }
 
     public static function mutateFormDataBeforeCreate(array $data): array
     {
-        $data['tenant_id'] = Filament::getTenant()?->getKey();
+        if (Filament::getCurrentPanel()?->getId() === 'portal') {
+            $data['tenant_id'] = Filament::getTenant()?->getKey();
+        }
+
         return $data;
     }
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
-        $data['tenant_id'] = Filament::getTenant()?->getKey();
+        if (Filament::getCurrentPanel()?->getId() === 'portal') {
+            $data['tenant_id'] = Filament::getTenant()?->getKey();
+        }
+
         return $data;
     }
 

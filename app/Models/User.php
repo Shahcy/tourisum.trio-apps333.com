@@ -10,10 +10,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Traits\HasRoles;
+use Lab404\Impersonate\Models\Impersonate;
 
 class User extends Authenticatable implements FilamentUser, HasTenants
 {
     use HasFactory, Notifiable, HasRoles;
+    use Impersonate;
 
     protected $fillable = [
         'name',
@@ -55,5 +57,20 @@ class User extends Authenticatable implements FilamentUser, HasTenants
     public function canAccessTenant(\Illuminate\Database\Eloquent\Model $tenant): bool
     {
         return (int) $tenant->getKey() === (int) $this->tenant_id;
+    }
+
+    public function employee()
+    {
+        return $this->hasOne(\App\Models\Employee::class);
+    }
+
+    public function canImpersonate(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function canBeImpersonated(): bool
+    {
+        return ! $this->hasRole('super_admin');
     }
 }

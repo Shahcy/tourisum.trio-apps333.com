@@ -12,9 +12,12 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\Concerns\ScopesToTenant;
+
 
 class BookingResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = Booking::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
@@ -40,14 +43,6 @@ class BookingResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('bookings.booking.plural');
-    }
-
-    public static function getEloquentQuery(): Builder
-    {
-        $user = Filament::auth()->user();
-
-        return parent::getEloquentQuery()
-            ->where('tenant_id', $user->tenant_id);
     }
 
     public static function form(Form $form): Form

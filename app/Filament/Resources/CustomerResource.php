@@ -11,9 +11,11 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Resources\Concerns\ScopesToTenant;
 
 class CustomerResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
@@ -39,17 +41,6 @@ class CustomerResource extends Resource
     public static function getPluralModelLabel(): string
     {
         return __('crm.customers.plural');
-    }
-
-    /**
-     * SaaS: Filter all queries by current tenant
-     */
-    public static function getEloquentQuery(): Builder
-    {
-        $user = Filament::auth()->user();
-
-        return parent::getEloquentQuery()
-            ->where('tenant_id', $user->tenant_id);
     }
 
     public static function form(Form $form): Form

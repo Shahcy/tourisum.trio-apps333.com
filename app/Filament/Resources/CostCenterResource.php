@@ -9,9 +9,12 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use App\Filament\Resources\Concerns\ScopesToTenant;
+
 
 class CostCenterResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = CostCenter::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';

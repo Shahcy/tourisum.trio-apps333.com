@@ -12,9 +12,11 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use App\Filament\Resources\Concerns\ScopesToTenant;
 
 class JournalEntryResource extends Resource
 {
+    use ScopesToTenant;
     protected static ?string $model = JournalEntry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
