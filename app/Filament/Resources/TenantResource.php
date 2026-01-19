@@ -52,7 +52,8 @@ class TenantResource extends Resource
 
                     FileUpload::make('logo_path')
                         ->label('Logo (optional)')
-                        ->directory('tenants/logos')
+                        ->disk('public')
+                        ->directory('tenant-logos')
                         ->image()
                         ->imageEditor()
                         ->maxSize(2048),

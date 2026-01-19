@@ -8,19 +8,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Department;
 use App\Models\JobTitle;
 
-
 class Tenant extends Model
 {
     use HasFactory;
 
     protected $fillable = [
         'name',
+        'domain',
         'email',
         'phone',
         'country',
         'currency',
         'logo_path',
         'primary_color',
+        'secondary_color',
+        'accent_color',
         'is_active',
     ];
 

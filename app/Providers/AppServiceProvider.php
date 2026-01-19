@@ -10,20 +10,17 @@ use App\Models\Payment;
 use App\Observers\PaymentObserver;
 use App\Models\Booking;
 use App\Observers\BookingObserver;
+use App\Models\Tenant;
+use App\Observers\TenantObserver;
+use Filament\Support\Facades\FilamentView;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
         \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
@@ -35,5 +32,24 @@ class AppServiceProvider extends ServiceProvider
         InvoiceItem::observe(InvoiceItemObserver::class);
         Payment::observe(PaymentObserver::class);
         Booking::observe(BookingObserver::class);
+
+        // Auto-palette من اللوجو
+        Tenant::observe(TenantObserver::class);
+
+        // Branding ديناميكي للـ Portal (ألوان + شعار/اسم)
+        FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn() => view('filament.hooks.tenant-branding-css')
+        );
+
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::head.end',
+            fn() => view('filament.hooks.brand-round-logo')
+        );
+
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::sidebar.header',
+            fn() => view('filament.hooks.portal-brand')
+        );
     }
 }

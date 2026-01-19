@@ -1,0 +1,30 @@
+/* Make Filament brand/logo circular */
+.fi-topbar-brand img,
+.fi-sidebar-header img,
+.fi-logo img,
+.fi-brand img {
+  border-radius: 9999px !important;
+  overflow: hidden !important;
+  object-fit: cover !important;
+}
+.portal-brand img {
+    border-radius: 9999px;
+    object-fit: cover;
+}
+.portal-brand {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.portal-brand .tenant-name {
+    font-weight: 600;
+    font-size: 1.125rem;
+}
+.portal-brand .tenant-name:hover {
+    text-decoration: underline;
+}
+.portal-brand .tenant-name:focus {
+    outline: 2px solid;
+    outline-offset: 2px;
+}
+
