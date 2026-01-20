@@ -5,8 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use App\Models\Department;
-use App\Models\JobTitle;
 
 class Tenant extends Model
 {
@@ -28,68 +26,66 @@ class Tenant extends Model
 
     public function users(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'tenant_id');
     }
 
-    // العلاقات التي يحتاجها النظام الحالي عندك
     public function customers(): HasMany
     {
-        return $this->hasMany(Customer::class);
+        return $this->hasMany(Customer::class, 'tenant_id');
     }
 
     public function bookings(): HasMany
     {
-        return $this->hasMany(Booking::class);
+        return $this->hasMany(Booking::class, 'tenant_id');
     }
 
     public function invoices(): HasMany
     {
-        return $this->hasMany(Invoice::class);
+        return $this->hasMany(Invoice::class, 'tenant_id');
     }
 
     public function payments(): HasMany
     {
-        return $this->hasMany(Payment::class);
+        return $this->hasMany(Payment::class, 'tenant_id');
     }
 
-    // علاقات HR المطلوبة لـ Filament Tenancy
     public function departments(): HasMany
     {
-        return $this->hasMany(Department::class);
+        return $this->hasMany(Department::class, 'tenant_id');
     }
 
     public function jobTitles(): HasMany
     {
-        return $this->hasMany(JobTitle::class);
+        return $this->hasMany(JobTitle::class, 'tenant_id');
     }
 
     public function leaveRequests(): HasMany
     {
-        return $this->hasMany(\App\Models\LeaveRequest::class);
+        return $this->hasMany(LeaveRequest::class, 'tenant_id');
     }
 
     public function employees(): HasMany
     {
-        return $this->hasMany(\App\Models\Employee::class);
+        return $this->hasMany(Employee::class, 'tenant_id');
     }
 
     public function attendances(): HasMany
     {
-        return $this->hasMany(\App\Models\Attendance::class);
+        return $this->hasMany(Attendance::class, 'tenant_id');
     }
 
     public function accounts(): HasMany
     {
-        return $this->hasMany(\App\Models\Account::class, 'tenant_id');
+        return $this->hasMany(Account::class, 'tenant_id');
     }
 
     public function journalEntries(): HasMany
     {
-        return $this->hasMany(JournalEntry::class);
+        return $this->hasMany(JournalEntry::class, 'tenant_id');
     }
 
     public function costCenters(): HasMany
     {
-        return $this->hasMany(\App\Models\CostCenter::class);
+        return $this->hasMany(CostCenter::class, 'tenant_id');
     }
 }

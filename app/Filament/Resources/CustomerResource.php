@@ -50,6 +50,15 @@ class CustomerResource extends Resource
                 Forms\Components\Section::make(__('crm.customers.sections.customer_data'))
                     ->columns(2)
                     ->schema([
+                        Forms\Components\Select::make('tenant_id')
+                            ->label('Company')
+                            ->relationship('tenant', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->default(fn() => auth()->user()?->tenant_id)
+                            ->required(fn() => auth()->user()?->tenant_id === null)
+                            ->visible(fn() => ! static::isPortalPanel() && auth()->user()?->tenant_id === null),
+
                         Forms\Components\TextInput::make('full_name')
                             ->label(__('crm.customers.fields.full_name'))
                             ->required()

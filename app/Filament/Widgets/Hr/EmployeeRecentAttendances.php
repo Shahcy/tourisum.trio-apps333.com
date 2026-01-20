@@ -32,7 +32,7 @@ class EmployeeRecentAttendances extends BaseWidget
             return Attendance::query()->whereRaw('1 = 0');
         }
 
-        $tenantId = Filament::getTenant()?->getKey();
+        $tenantId = \App\Support\TenantContext::requireId();
 
         return Attendance::query()
             ->where('tenant_id', $tenantId)

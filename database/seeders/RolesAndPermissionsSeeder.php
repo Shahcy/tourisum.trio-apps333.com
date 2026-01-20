@@ -63,7 +63,19 @@ class RolesAndPermissionsSeeder extends Seeder
         $staff = Role::firstOrCreate(['name' => 'staff', 'guard_name' => $guard]);
 
         // Role permissions
-        $admin->syncPermissions(Permission::where('guard_name', $guard)->pluck('name')->all());
+        $all = Permission::where('guard_name', $guard)->get();
+
+        $adminAllowed = $all->filter(function ($p) {
+            $name = strtolower($p->name);
+
+            // استثناء أي صلاحيات خاصة بالـ Tenant/Company
+            return !str_contains($name, 'tenant')
+                && !str_contains($name, 'tenants')
+                && !str_contains($name, 'company');
+        });
+
+        $admin->syncPermissions($adminAllowed->pluck('name')->all());
+
 
         $manager->syncPermissions([
             'dashboard.view',

@@ -1,10 +1,16 @@
 <?php
 
+use App\Http\Controllers\Admin\ImpersonationController;
 use App\Models\Tenant;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
+use Livewire\Livewire;
+
+Route::get('/login', function () {
+    return redirect('/admin/login');
+})->name('login');
 
 Route::get('/lang/{locale}', function (string $locale) {
     abort_unless(in_array($locale, ['en', 'ar'], true), 404);
@@ -12,41 +18,38 @@ Route::get('/lang/{locale}', function (string $locale) {
     return redirect()->back();
 })->name('lang.switch');
 
-// SuperAdmin -> دخول كأدمن شركة (Impersonation) بدون Login
-Route::get('/tenants/{tenant}/login-as-admin', function (Tenant $tenant) {
-    // إذا أردت حماية لاحقاً، ضع شرطك هنا بدلاً من middleware auth
-    $super = User::first(); // عدّل هذا لاختيار المستخدم الذي تريد تسجيله كـ super
-    session(['impersonator_id' => $super?->id]);
+Route::middleware(['web', 'auth'])->group(function () {
+    // SuperAdmin -> O_OrU^U, UŸOœO_U.U+ O'OñUŸOc (Impersonation) O"O_U^U+ Login
+    Route::get('/tenants/{tenant}/login-as-admin', function (Tenant $tenant) {
+        abort_unless(Auth::user()?->canImpersonate(), 403);
 
-    $portalPanel = Filament::getPanel('portal');
-    Filament::setCurrentPanel($portalPanel);
-    Filament::setTenant($tenant);
+        $super = Auth::user();
+        session(['impersonator_id' => $super?->id]);
 
-    $target = User::where('tenant_id', $tenant->id)->orderBy('id')->firstOrFail();
+        $portalPanel = Filament::getPanel('portal');
+        Filament::setCurrentPanel($portalPanel);
+        Filament::setTenant($tenant);
 
-    Auth::guard($portalPanel->getAuthGuard())->login($target);
-    request()->session()->regenerate();
+        $target = User::where('tenant_id', $tenant->id)->orderBy('id')->firstOrFail();
 
-    return redirect()->route('filament.portal.pages.dashboard', ['tenant' => $tenant->id]);
-})->name('tenants.login-as-admin');
+        Auth::guard($portalPanel->getAuthGuard())->login($target);
+        request()->session()->regenerate();
 
-// رجوع للمستخدم الأصلي
-Route::get('/admin/impersonate/leave', function () {
-    $superId = session('impersonator_id');
-    session()->forget('impersonator_id');
+        return redirect()->route('filament.portal.pages.dashboard', ['tenant' => $tenant->id]);
+    })->name('tenants.login-as-admin');
 
-    if ($superId) {
-        $super = User::find($superId);
-        if ($super) {
-            Auth::guard('web')->login($super);
-            request()->session()->regenerate();
-        }
-    }
+    Route::get('/admin/impersonate/{tenant}', [ImpersonationController::class, 'start'])
+        ->name('admin.impersonate.start');
 
-    return redirect('/admin');
-})->name('admin.impersonate.leave');
+    Route::get('/admin/impersonate-leave', [ImpersonationController::class, 'leave'])
+        ->name('admin.impersonate.leave');
+});
 
-// اختصار من لوحة الأدمن إلى بوابة العميل
-Route::get('/admin/impersonate/{tenant}', function (Tenant $tenant) {
-    return redirect()->route('tenants.login-as-admin', ['tenant' => $tenant->id]);
-})->name('admin.impersonate');
+// Livewire v3 required endpoints (explicit)
+Livewire::setUpdateRoute(function ($handle) {
+    return Route::post('/livewire/update', $handle)->name('livewire.update');
+});
+
+Livewire::setScriptRoute(function ($handle) {
+    return Route::get('/livewire/livewire.js', $handle);
+});

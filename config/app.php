@@ -123,4 +123,7 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'domain' => env('APP_DOMAIN', 'trio-apps.com'),
+    'admin_subdomain' => env('ADMIN_SUBDOMAIN', 'admin'),
+
 ];

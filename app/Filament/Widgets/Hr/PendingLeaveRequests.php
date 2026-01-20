@@ -25,7 +25,7 @@ class PendingLeaveRequests extends BaseWidget
 
     protected function getTableQuery(): Builder
     {
-        $tenantId = Filament::getTenant()?->getKey();
+        $tenantId = \App\Support\TenantContext::requireId();
 
         return LeaveRequest::query()
             ->where('tenant_id', $tenantId)

@@ -70,7 +70,7 @@ class Invoice extends Model
 
     public function getRemainingAttribute()
     {
-        return max($this->total - $this->paid_amount, 0);
+        return max((float) $this->total - (float) $this->paid_amount, 0);
     }
 
     public function recalculateTotals(): void

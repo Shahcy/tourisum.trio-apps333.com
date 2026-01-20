@@ -36,7 +36,7 @@ class ManagePermissions extends Page
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        abort_unless($user && $user->hasAnyRole(['admin', 'manager']), 403);
+        abort_unless($user && $user->hasRole('super_admin'), 403);
 
         $this->data['role'] = Role::query()->orderBy('name')->value('name');
         $this->loadRolePermissions();
@@ -128,7 +128,7 @@ class ManagePermissions extends Page
         /** @var \App\Models\User|null $user */
         $user = Auth::user();
 
-        abort_unless($user && $user->hasAnyRole(['admin', 'manager']), 403);
+        abort_unless($user && $user->hasRole('super_admin'), 403);
 
         $state = $this->form->getState();
 
@@ -149,5 +149,11 @@ class ManagePermissions extends Page
             ->send();
 
         $this->loadRolePermissions();
+    }
+
+    public static function canAccess(): bool
+    {
+        $user = Auth::user();
+        return (bool) ($user?->hasRole('super_admin'));
     }
 }

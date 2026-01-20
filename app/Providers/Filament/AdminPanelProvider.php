@@ -8,7 +8,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\MenuItem;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -18,22 +17,25 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Illuminate\Support\Facades\App;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $domain = config('app.domain');
+        $adminSub = config('app.admin_subdomain');
+
         return $panel
             ->default()
             ->id('admin')
             ->path('admin')
             ->authGuard('web')
-            ->login()
-
-            // Brand ثابت للأدمن (Global)
+            ->login(\App\Filament\Pages\Auth\AdminLogin::class)
+            ->homeUrl('/admin')
             ->brandName(config('app.name'))
             ->brandLogo(null)
+
+            ->renderHook('panels::body.end', fn() => view('filament.hooks.hide-company-permissions'))
 
             ->userMenuItems([
                 \Filament\Navigation\MenuItem::make('switch_to_ar')
@@ -46,6 +48,7 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn() => route('lang.switch', ['locale' => 'en']))
                     ->visible(fn() => app()->getLocale() !== 'en'),
             ])
+
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -68,7 +71,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\AlertsList::class,
             ])
 
-            // Web middleware stack
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

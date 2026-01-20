@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+
 
 class SuperAdminSeeder extends Seeder
 {
@@ -16,6 +18,8 @@ class SuperAdminSeeder extends Seeder
             'name' => 'super_admin',
             'guard_name' => 'web',
         ]);
+
+        $role->syncPermissions(Permission::where('guard_name', 'web')->pluck('name')->all());
 
         // Create or update super admin user (email does NOT need to be real)
         $user = User::updateOrCreate(

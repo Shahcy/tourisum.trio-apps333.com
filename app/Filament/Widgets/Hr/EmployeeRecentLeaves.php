@@ -3,16 +3,21 @@
 namespace App\Filament\Widgets\Hr;
 
 use App\Models\LeaveRequest;
-use Filament\Facades\Filament;
+use App\Support\TenantContext;
 use Filament\Tables;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
 
 class EmployeeRecentLeaves extends BaseWidget
 {
-    public int $employeeId;
+    public ?int $employeeId = null;
 
     protected static bool $isLazy = true;
+
+    public function mount(?int $employeeId = null): void
+    {
+        $this->employeeId = $employeeId;
+    }
 
     protected function getHeading(): ?string
     {
@@ -21,7 +26,11 @@ class EmployeeRecentLeaves extends BaseWidget
 
     protected function getTableQuery(): Builder
     {
-        $tenantId = Filament::getTenant()?->getKey();
+        if (! $this->employeeId) {
+            return LeaveRequest::query()->whereRaw('1 = 0');
+        }
+
+        $tenantId = TenantContext::requireId();
 
         return LeaveRequest::query()
             ->where('tenant_id', $tenantId)

@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Invoice;
-use Filament\Facades\Filament;
+use App\Support\TenantContext;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -18,23 +18,17 @@ class AlertsList extends BaseWidget
 
     public function table(Table $table): Table
     {
-        $tenantId = Filament::getTenant()?->id ?? Filament::auth()->user()->tenant_id;
+        $tenantId = TenantContext::id();
+
+        // إذا ما في tenant context، لا تعرض شيء (بدون تسريب بيانات)
+        if (! $tenantId) {
+            return $table->query(Invoice::query()->whereRaw('1=0'));
+        }
 
         return $table
             ->query(
                 Invoice::query()
                     ->with(['customer:id,full_name'])
-                    ->select([
-                        'id',
-                        'tenant_id',
-                        'customer_id',
-                        'number',
-                        'due_date',
-                        'total',
-                        'paid_amount',
-                        'remaining',
-                        'status',
-                    ])
                     ->where('tenant_id', $tenantId)
                     ->whereNotNull('due_date')
                     ->whereDate('due_date', '<', today())
@@ -67,15 +61,6 @@ class AlertsList extends BaseWidget
                 Tables\Columns\TextColumn::make('remaining')
                     ->label(__('Remaining'))
                     ->numeric(),
-            ])
-            ->actions([
-                Tables\Actions\Action::make('open')
-                    ->label(__('Open'))
-                    ->url(fn(Invoice $record) => route('filament.admin.resources.invoices.edit', [
-                        'tenant' => (Filament::getTenant()?->getKey() ?? Filament::auth()->user()->tenant_id),
-                        'record' => $record,
-                    ]))
-                    ->openUrlInNewTab(),
             ])
             ->defaultPaginationPageOption(5)
             ->paginated([5]);

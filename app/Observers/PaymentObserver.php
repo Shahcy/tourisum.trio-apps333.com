@@ -6,7 +6,7 @@ use App\Models\Account;
 use App\Models\Invoice;
 use App\Models\JournalEntry;
 use App\Models\Payment;
-use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class PaymentObserver
@@ -14,15 +14,17 @@ class PaymentObserver
     public function created(Payment $payment): void
     {
         DB::transaction(function () use ($payment) {
-            $this->createLightJournalEntry($payment);
+            // محاسبة خفيفة: فعّلها/أغلقها لاحقًا بسهولة
+            if (config('accounting.light_journals', true)) {
+                $this->createLightJournalEntry($payment);
+            }
+
             $this->syncInvoiceStatusIfNeeded($payment);
         });
     }
 
     public function updated(Payment $payment): void
     {
-        // للمحاسبة الخفيفة: لا نعمل إعادة ترحيل تلقائي عند التعديل حتى لا نعقّد الأمور.
-        // نكتفي بتحديث حالة الفاتورة إذا كانت الدفعة مرتبطة بفاتورة.
         $this->syncInvoiceStatusIfNeeded($payment);
     }
 
@@ -61,11 +63,7 @@ class PaymentObserver
 
     private function createLightJournalEntry(Payment $payment): void
     {
-        // نظام محاسبة خفيف: قيد يومي بسيط فقط عند الدفع.
-        // - قبض (in): Debit صندوق/بنك, Credit إيرادات
-        // - صرف (out): Debit مصروفات, Credit صندوق/بنك
-
-        $tenantId = $payment->tenant_id ?: Filament::getTenant()?->getKey();
+        $tenantId = (int) $payment->tenant_id;
         if (! $tenantId) {
             return;
         }
@@ -75,7 +73,6 @@ class PaymentObserver
             ->where('id', $payment->account_id)
             ->first();
 
-        // Safety: لو الحساب غير موجود (أو payment.account_id غير صحيح)
         if (! $cashOrBank) {
             $cashOrBank = $this->firstOrCreateDefaultCashAccount($tenantId);
         }
@@ -94,7 +91,7 @@ class PaymentObserver
             'description' => $this->journalDescription($payment),
             'status' => 'posted',
             'posted_at' => now(),
-            'posted_by' => Filament::auth()->id(),
+            'posted_by' => Auth::id(),
         ]);
 
         if ($payment->direction === 'out') {
@@ -119,7 +116,6 @@ class PaymentObserver
             return;
         }
 
-        // direction = in
         $revenue = $this->firstOrCreateDefaultRevenueAccount($tenantId);
 
         $entry->lines()->create([
@@ -139,7 +135,7 @@ class PaymentObserver
         ]);
     }
 
-    private function nextEntryNo(int|string $tenantId): string
+    private function nextEntryNo(int $tenantId): string
     {
         $count = (int) JournalEntry::query()->where('tenant_id', $tenantId)->count();
         $next = $count + 1;
@@ -157,7 +153,7 @@ class PaymentObserver
         return $base;
     }
 
-    private function firstOrCreateDefaultCashAccount(int|string $tenantId): Account
+    private function firstOrCreateDefaultCashAccount(int $tenantId): Account
     {
         return Account::query()->firstOrCreate(
             ['tenant_id' => $tenantId, 'code' => '1000'],
@@ -165,7 +161,7 @@ class PaymentObserver
         );
     }
 
-    private function firstOrCreateDefaultRevenueAccount(int|string $tenantId): Account
+    private function firstOrCreateDefaultRevenueAccount(int $tenantId): Account
     {
         return Account::query()->firstOrCreate(
             ['tenant_id' => $tenantId, 'code' => '4000'],
@@ -173,7 +169,7 @@ class PaymentObserver
         );
     }
 
-    private function firstOrCreateDefaultExpenseAccount(int|string $tenantId): Account
+    private function firstOrCreateDefaultExpenseAccount(int $tenantId): Account
     {
         return Account::query()->firstOrCreate(
             ['tenant_id' => $tenantId, 'code' => '5000'],

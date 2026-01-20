@@ -5,8 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use App\Models\Tenant;
-use Filament\Facades\Filament;
 
 class Payment extends Model
 {
@@ -50,21 +48,13 @@ class Payment extends Model
 
     protected static function booted(): void
     {
-        static::creating(function ($payment) {
-            // لو ما انبعت direction من الفورم
+        static::creating(function (self $payment) {
             if (empty($payment->direction)) {
-                // إذا الدفعة مرتبطة بفاتورة -> قبض
-                if ($payment->reference_type === \App\Models\Invoice::class) {
-                    $payment->direction = 'in';
-                } else {
-                    $payment->direction = 'in'; // default عام
-                }
+                $payment->direction = 'in';
             }
 
-            // تأكد tenant_id إذا ناقص
-            if (empty($payment->tenant_id)) {
-                $payment->tenant_id = Filament::getTenant()?->getKey();
-            }
+            // tenant_id لازم يجي من الفورم/السيرفس/الـ scoping
+            // ما بنعتمد على Filament هون لأنه طبقة UI
         });
     }
 }

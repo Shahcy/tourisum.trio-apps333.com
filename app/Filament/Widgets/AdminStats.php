@@ -3,7 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Services\DashboardStatsService;
-use Filament\Facades\Filament;
+use App\Support\TenantContext;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -13,9 +13,16 @@ class AdminStats extends StatsOverviewWidget
 
     protected function getStats(): array
     {
-        $tenantId = Filament::getTenant()?->getKey()
-            ?? Filament::auth()->user()?->tenant_id
-            ?? 0;
+        $tenantId = TenantContext::id();
+
+        if (! $tenantId) {
+            return [
+                Stat::make(__('Customers'), 0),
+                Stat::make(__('Bookings'), 0),
+                Stat::make(__('Invoices'), 0),
+                Stat::make(__('Unpaid Invoices'), 0),
+            ];
+        }
 
         $counts = app(DashboardStatsService::class)->getCounts((int) $tenantId);
 
@@ -27,4 +34,3 @@ class AdminStats extends StatsOverviewWidget
         ];
     }
 }
-

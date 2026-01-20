@@ -32,9 +32,43 @@ class UserResource extends Resource
     protected static ?string $pluralModelLabel = 'Users';
     protected static bool $shouldRegisterNavigation = true;
 
+    protected static function isSuperAdmin(): bool
+    {
+        return (bool) Filament::auth()->user()?->hasRole('super_admin');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Filament::auth()->user();
+        return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
+    }
+
     protected static function isPortalPanel(): bool
     {
         return Filament::getCurrentPanel()?->getId() === 'portal';
+    }
+
+    public static function canCreate(): bool
+    {
+        $user = Filament::auth()->user();
+        if (! $user) {
+            return false;
+        }
+
+        // Explicitly allow creation for admins and company admins.
+        return $user->hasAnyRole(['super_admin', 'admin', 'company_admin']);
+    }
+
+    public static function canViewAny(): bool
+    {
+        $user = Filament::auth()->user();
+        return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
+    }
+
+    public static function canEdit($record): bool
+    {
+        $user = Filament::auth()->user();
+        return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
     }
 
     public static function form(Forms\Form $form): Forms\Form
@@ -54,8 +88,8 @@ class UserResource extends Resource
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
 
-                    // في Portal: مخفي ومثبت
-                    // في Admin Panel: ظاهر حتى السوبرأدمن يقدر يحدد الشركة
+                    // Portal: يختبئ اختيار التينانت
+                    // Admin Panel: إجباري تحديد التينانت
                     Select::make('tenant_id')
                         ->label('Company (Tenant)')
                         ->relationship('tenant', 'name')
@@ -68,17 +102,24 @@ class UserResource extends Resource
                     Select::make('roles')
                         ->label('Roles')
                         ->multiple()
-                        ->options(function () {
-                            $q = Role::query()->where('guard_name', 'web');
+                        ->relationship(
+                            name: 'roles',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: function ($query) {
+                                $query->where('guard_name', 'web');
 
-                            // في Portal: امنع super_admin
-                            if (static::isPortalPanel()) {
-                                $q->where('name', '!=', 'super_admin');
+                                // Super admin يشاهد فقط الأدوار الإدارية
+                                if (static::isSuperAdmin()) {
+                                    $query->whereIn('name', ['super_admin', 'admin', 'company_admin']);
+                                    return;
+                                }
+
+                                // باقي اللوحات: استبعاد super_admin
+                                $query->where('name', '!=', 'super_admin');
                             }
-
-                            return $q->pluck('name', 'name')->toArray();
-                        })
-                        ->dehydrated(false),
+                        )
+                        ->preload()
+                        ->searchable(),
                 ])
                 ->columns(2),
 
@@ -110,7 +151,7 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                // في Portal لا تعرض Company
+                // في Portal لا نعرض الشركة
                 TextColumn::make('tenant.name')
                     ->label('Company')
                     ->sortable()
@@ -187,19 +228,23 @@ class UserResource extends Resource
 
         $isSuper = $authId
             ? DB::table('model_has_roles')
-            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-            ->where('model_has_roles.model_type', User::class)
-            ->where('model_has_roles.model_id', $authId)
-            ->where('roles.name', 'super_admin')
-            ->exists()
+                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                ->where('model_has_roles.model_type', User::class)
+                ->where('model_has_roles.model_id', $authId)
+                ->where('roles.name', 'super_admin')
+                ->exists()
             : false;
 
-        // السوبرأدمن يشوف الكل
+        // سوبر أدمن: يشاهد فقط الأدوار الإدارية
         if ($isSuper) {
-            return $query;
+            return $query->whereHas('roles', fn($q) => $q->whereIn('name', [
+                'super_admin',
+                'admin',
+                'company_admin',
+            ]));
         }
 
-    // أي مستخدم غير سوبرأدمن: يشوف شركته فقط + يخفي super_admin
+        // باقي اللوحات: حصر بيانات التينانت الحالي واستبعاد super_admin
         /** @var User|null $u */
         $u = Auth::user();
 

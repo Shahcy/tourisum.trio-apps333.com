@@ -2,10 +2,9 @@
 
 namespace App\Filament\Resources\Concerns;
 
-use App\Models\User;
+use App\Support\TenantContext;
 use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Auth;
 
 trait ScopesToTenant
 {
@@ -14,21 +13,24 @@ trait ScopesToTenant
         return Filament::getCurrentPanel()?->getId() === 'portal';
     }
 
+    protected static function requireTenantId(): int
+    {
+        // Portal لازم يكون دائمًا ضمن Tenant (لوكل أو سيرفر)
+        abort_if(! static::isPortalPanel(), 500, 'requireTenantId() called outside portal panel.');
+
+        return TenantContext::requireId();
+    }
+
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
 
-        // السوبرأدمن (admin panel): لا تقيد شيء
+        // admin panel: بدون تقييد
         if (! static::isPortalPanel()) {
             return $query;
         }
 
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $tenantId = Filament::getTenant()?->id ?? $u?->tenant_id;
-
-        return $query->where('tenant_id', $tenantId);
+        return $query->where('tenant_id', static::requireTenantId());
     }
 
     public static function mutateFormDataBeforeCreate(array $data): array
@@ -37,11 +39,7 @@ trait ScopesToTenant
             return $data;
         }
 
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
-
+        $data['tenant_id'] = static::requireTenantId();
         return $data;
     }
 
@@ -51,11 +49,7 @@ trait ScopesToTenant
             return $data;
         }
 
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
-
+        $data['tenant_id'] = static::requireTenantId();
         return $data;
     }
 }

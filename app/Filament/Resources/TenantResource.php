@@ -34,6 +34,12 @@ class TenantResource extends Resource
     protected static ?string $pluralModelLabel = 'Companies';
     protected static bool $shouldRegisterNavigation = true;
 
+    public static function canCreate(): bool
+    {
+        $user = Filament::auth()->user();
+        return (bool) ($user?->hasRole('super_admin'));
+    }
+
 
     public static function form(Forms\Form $form): Forms\Form
     {
@@ -91,21 +97,16 @@ class TenantResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+
             ->actions([
-                Tables\Actions\Action::make('login_as_admin')
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+                \Filament\Tables\Actions\Action::make('login_as_admin')
                     ->label('Login as admin')
                     ->icon('heroicon-o-arrow-right-on-rectangle')
-                    ->visible(function (): bool {
-                        /** @var User|null $u */
-                        $u = Auth::user();
-
-                        return (bool) $u?->hasRole('super_admin');
-                    })
-                    ->url(fn(Tenant $record) => route('admin.impersonate', ['tenant' => $record->id])),
-
-                Tables\Actions\EditAction::make(),
-            ])
-            ->defaultSort('id', 'desc');
+                    ->url(fn($record) => route('admin.impersonate.start', $record))
+                    ->openUrlInNewTab(false),
+            ]);
     }
 
     public static function getPages(): array
@@ -119,6 +120,8 @@ class TenantResource extends Resource
 
     public static function shouldRegisterNavigation(): bool
     {
-        return Filament::getCurrentPanel()?->getId() === 'admin';
+        $user = Filament::auth()->user();
+        return Filament::getCurrentPanel()?->getId() === 'admin'
+            && (bool) ($user?->hasRole('super_admin'));
     }
 }

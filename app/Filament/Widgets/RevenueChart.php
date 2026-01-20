@@ -3,23 +3,34 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Payment;
-use Filament\Facades\Filament;
+use App\Support\TenantContext;
 use Filament\Widgets\ChartWidget;
 
 class RevenueChart extends ChartWidget
 {
     protected static ?string $heading = 'Monthly Revenue';
-
     protected static bool $isLazy = true;
-
     protected int | string | array $columnSpan = 'full';
 
     protected function getData(): array
     {
-        $tenantId = Filament::auth()->user()->tenant_id;
+        $tenantId = TenantContext::id();
+
+        if (! $tenantId) {
+            return [
+                'datasets' => [[
+                    'label' => __('Revenue'),
+                    'data' => [],
+                    'tension' => 0.4,
+                    'borderWidth' => 3,
+                ]],
+                'labels' => [],
+            ];
+        }
 
         $rows = Payment::query()
             ->where('tenant_id', $tenantId)
+            ->where('direction', 'in')
             ->whereDate('date', '>=', now()->subDays(30)->toDateString())
             ->selectRaw('DATE(date) as day, SUM(amount) as total')
             ->groupBy('day')
@@ -35,14 +46,12 @@ class RevenueChart extends ChartWidget
         }
 
         return [
-            'datasets' => [
-                [
-                    'label' => __('Revenue'),
-                    'data' => $data,
-                    'tension' => 0.4,
-                    'borderWidth' => 3,
-                ],
-            ],
+            'datasets' => [[
+                'label' => __('Revenue'),
+                'data' => $data,
+                'tension' => 0.4,
+                'borderWidth' => 3,
+            ]],
             'labels' => $labels,
         ];
     }

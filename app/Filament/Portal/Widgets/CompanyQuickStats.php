@@ -15,7 +15,8 @@ class CompanyQuickStats extends BaseWidget
 
     protected function getStats(): array
     {
-        $tenantId = Filament::getTenant()?->id ?? Filament::auth()->user()->tenant_id;
+        $tenantId = (int) Filament::getTenant()?->getKey();
+        abort_if(! $tenantId, 403, 'Tenant context is missing.');
 
         return [
             Stat::make(__('Customers'), Customer::query()->where('tenant_id', $tenantId)->count()),
