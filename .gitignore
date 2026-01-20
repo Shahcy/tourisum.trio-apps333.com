@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+/storage
+/storage/*
+/storage/**
+/storage/framework
+/storage/framework/*
+/storage/framework/**
+/storage/logs
+/storage/logs/*
+
