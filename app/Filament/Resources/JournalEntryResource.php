@@ -20,6 +20,7 @@ class JournalEntryResource extends Resource
     protected static ?string $model = JournalEntry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?int $navigationSort = 42;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.

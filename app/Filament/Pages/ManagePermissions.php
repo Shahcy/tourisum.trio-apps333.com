@@ -20,9 +20,9 @@ class ManagePermissions extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
     protected static ?string $navigationLabel = 'Manage Permissions';
-    protected static ?string $navigationGroup = 'Settings';
+    protected static ?string $navigationGroup = 'saas.group';
     protected static ?string $title = 'Manage Permissions';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 98;
 
     protected static string $view = 'filament.pages.manage-permissions';
 
@@ -56,7 +56,6 @@ class ManagePermissions extends Page
                         $this->loadRolePermissions();
                     }),
 
-                // Select All / Deselect All
                 Actions::make([
                     Action::make('selectAll')
                         ->label('Select all')

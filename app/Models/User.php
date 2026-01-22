@@ -44,7 +44,7 @@ class User extends Authenticatable implements FilamentUser, HasTenants
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return true; // لاحقاً نربطها بـ role/permission
+        return true; // Ù„Ø§Ø­Ù‚Ø§Ù‹ Ù†Ø±Ø¨Ø·Ù‡Ø§ Ø¨Ù€ role/permission
     }
 
     public function getTenants(Panel $panel): Collection
@@ -74,3 +74,4 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return ! $this->hasRole('super_admin');
     }
 }
+

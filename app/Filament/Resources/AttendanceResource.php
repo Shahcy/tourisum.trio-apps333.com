@@ -20,7 +20,7 @@ class AttendanceResource extends Resource
     use ScopesToTenant;
     protected static ?string $model = Attendance::class;
 
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 52;
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
     // Tenancy

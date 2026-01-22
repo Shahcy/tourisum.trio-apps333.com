@@ -16,7 +16,7 @@ class HrDashboard extends Page
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationLabel = 'HR';
     protected static ?string $navigationGroup = 'HR';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 50;
 
     protected static string $view = 'filament.pages.hr-dashboard';
 

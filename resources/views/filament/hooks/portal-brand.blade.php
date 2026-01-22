@@ -1,5 +1,5 @@
-﻿@php
-    $tenant = Filament\Facades\Filament::getTenant();
+@php
+    $tenant = \App\Support\TenantContext::current();
     $logo = $tenant?->logo_path ? Storage::disk('public')->url($tenant->logo_path) : null;
     $initial = \Illuminate\Support\Str::of($tenant?->name ?? config('app.name'))
         ->substr(0, 1)
@@ -20,3 +20,4 @@
     </span>
 
 </div>
+

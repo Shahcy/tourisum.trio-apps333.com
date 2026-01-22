@@ -1,5 +1,5 @@
 @php
-    $tenant = \Filament\Facades\Filament::getTenant();
+    $tenant = \App\Support\TenantContext::current();
 @endphp
 
 @if ($tenant)

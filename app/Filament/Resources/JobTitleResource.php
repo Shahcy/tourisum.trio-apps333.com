@@ -20,7 +20,7 @@ class JobTitleResource extends Resource
     protected static ?string $tenantRelationshipName = 'jobTitles';
 
     protected static ?string $navigationIcon = 'heroicon-o-identification';
-    protected static ?int $navigationSort = 21;
+    protected static ?int $navigationSort = 61;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.

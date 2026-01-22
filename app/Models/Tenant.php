@@ -88,4 +88,14 @@ class Tenant extends Model
     {
         return $this->hasMany(CostCenter::class, 'tenant_id');
     }
+
+    public function providers(): HasMany
+    {
+        return $this->hasMany(Provider::class, 'tenant_id');
+    }
+
+    public function integrationLogs(): HasMany
+    {
+        return $this->hasMany(IntegrationLog::class, 'tenant_id');
+    }
 }

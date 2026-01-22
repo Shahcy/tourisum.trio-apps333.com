@@ -1,5 +1,5 @@
 @php
-    $tenant = \Filament\Facades\Filament::getTenant();
+    $tenant = \App\Support\TenantContext::current();
     $logoUrl = null;
     if ($tenant?->logo_path) {
         $logoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($tenant->logo_path);

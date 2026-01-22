@@ -20,7 +20,7 @@ class DepartmentResource extends Resource
     protected static ?string $tenantRelationshipName = 'departments';
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?int $navigationSort = 20;
+    protected static ?int $navigationSort = 60;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.

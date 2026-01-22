@@ -8,6 +8,25 @@ use Illuminate\Support\Facades\Auth;
 
 class RoleResource extends \BezhanSalleh\FilamentShield\Resources\RoleResource
 {
+    protected static ?string $navigationGroup = 'saas.group';
+    protected static ?string $navigationLabel = 'filament_shield.roles';
+    protected static ?int $navigationSort = 99;
+
+    public static function getNavigationGroup(): ?string
+    {
+        return __('saas.group');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('filament_shield.roles');
+    }
+
+    public static function getNavigationParentItem(): ?string
+    {
+        return __('filament_shield.label');
+    }
+
     public static function isScopedToTenant(): bool
     {
         return false;

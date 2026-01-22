@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\ApplyTenantTheme;
 use App\Http\Middleware\SetLocale;
 use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Filament\Http\Middleware\Authenticate;
@@ -32,7 +33,7 @@ class AdminPanelProvider extends PanelProvider
             ->authGuard('web')
             ->login(\App\Filament\Pages\Auth\AdminLogin::class)
             ->homeUrl('/admin')
-            ->brandName(config('app.name'))
+            ->brandName(null)
             ->brandLogo(null)
 
             ->renderHook('panels::body.end', fn() => view('filament.hooks.hide-company-permissions'))
@@ -80,6 +81,7 @@ class AdminPanelProvider extends PanelProvider
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
                 SetLocale::class,
+                ApplyTenantTheme::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])

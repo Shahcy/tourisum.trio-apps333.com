@@ -10,6 +10,8 @@ use App\Models\Payment;
 use App\Observers\PaymentObserver;
 use App\Models\Booking;
 use App\Observers\BookingObserver;
+use App\Models\BookingPayment;
+use App\Observers\BookingPaymentObserver;
 use App\Models\Tenant;
 use App\Observers\TenantObserver;
 use Filament\Support\Facades\FilamentView;
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
         InvoiceItem::observe(InvoiceItemObserver::class);
         Payment::observe(PaymentObserver::class);
         Booking::observe(BookingObserver::class);
+        BookingPayment::observe(BookingPaymentObserver::class);
 
         // Auto-palette من اللوجو
         Tenant::observe(TenantObserver::class);
@@ -48,8 +51,18 @@ class AppServiceProvider extends ServiceProvider
         );
 
         \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::topbar.start',
+            fn() => view('filament.hooks.tenant-brand')
+        );
+
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
             'panels::sidebar.header',
-            fn() => view('filament.hooks.portal-brand')
+            fn() => view('filament.hooks.app-brand')
+        );
+
+        \Filament\Support\Facades\FilamentView::registerRenderHook(
+            'panels::body.end',
+            fn() => view('filament.hooks.ensure-livewire-start')
         );
     }
 }

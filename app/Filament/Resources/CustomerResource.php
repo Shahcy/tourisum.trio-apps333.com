@@ -6,6 +6,7 @@ use App\Filament\Resources\CustomerResource\Pages;
 use App\Models\Customer;
 use Filament\Facades\Filament;
 use Filament\Forms;
+use Filament\Forms\Get;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
@@ -19,6 +20,7 @@ class CustomerResource extends Resource
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?int $navigationSort = 20;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.
@@ -90,10 +92,56 @@ class CustomerResource extends Resource
                             ->label(__('crm.customers.fields.nationality'))
                             ->maxLength(100),
 
+                        Forms\Components\TextInput::make('address')
+                            ->label(__('crm.customers.fields.address'))
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('company_name')
+                            ->label(__('crm.customers.fields.company_name'))
+                            ->maxLength(255),
+
+                        Forms\Components\TextInput::make('alt_phone')
+                            ->label(__('crm.customers.fields.alt_phone'))
+                            ->tel()
+                            ->maxLength(50),
+
+                        Forms\Components\TextInput::make('alt_email')
+                            ->label(__('crm.customers.fields.alt_email'))
+                            ->email()
+                            ->maxLength(255),
+
                         Forms\Components\Textarea::make('notes')
                             ->label(__('crm.customers.fields.notes'))
                             ->rows(4)
                             ->columnSpanFull(),
+                    ]),
+
+                Forms\Components\Section::make(__('crm.customers.sections.identity'))
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\Select::make('document_type')
+                            ->label(__('crm.customers.fields.document_type'))
+                            ->options([
+                                'id' => __('crm.customers.document_types.id'),
+                                'passport' => __('crm.customers.document_types.passport'),
+                            ]),
+
+                        Forms\Components\TextInput::make('document_number')
+                            ->label(__('crm.customers.fields.document_number'))
+                            ->maxLength(100),
+
+                        Forms\Components\DatePicker::make('document_expiry')
+                            ->label(__('crm.customers.fields.document_expiry')),
+
+                        Forms\Components\DatePicker::make('date_of_birth')
+                            ->label(__('crm.customers.fields.date_of_birth')),
+
+                        Forms\Components\Select::make('gender')
+                            ->label(__('crm.customers.fields.gender'))
+                            ->options([
+                                'male' => __('crm.customers.genders.male'),
+                                'female' => __('crm.customers.genders.female'),
+                            ]),
                     ]),
 
                 Forms\Components\Section::make(__('crm.customers.sections.passport_visa'))
@@ -101,10 +149,12 @@ class CustomerResource extends Resource
                     ->schema([
                         Forms\Components\TextInput::make('passport_number')
                             ->label(__('crm.customers.fields.passport_number'))
+                            ->visible(fn(Get $get) => $get('document_type') !== 'passport')
                             ->maxLength(100),
 
                         Forms\Components\DatePicker::make('passport_expiry')
-                            ->label(__('crm.customers.fields.passport_expiry')),
+                            ->label(__('crm.customers.fields.passport_expiry'))
+                            ->visible(fn(Get $get) => $get('document_type') !== 'passport'),
 
                         Forms\Components\TextInput::make('visa_type')
                             ->label(__('crm.customers.fields.visa_type'))

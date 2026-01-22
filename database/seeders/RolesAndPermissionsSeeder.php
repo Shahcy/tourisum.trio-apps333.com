@@ -47,6 +47,10 @@ class RolesAndPermissionsSeeder extends Seeder
 
             // Permissions management
             'permissions.manage',
+
+            // Providers
+            'providers.view',
+            'providers.manage',
         ];
 
         foreach ($permissions as $name) {
@@ -76,6 +80,9 @@ class RolesAndPermissionsSeeder extends Seeder
 
         $admin->syncPermissions($adminAllowed->pluck('name')->all());
 
+        $companyAdmin = Role::firstOrCreate(['name' => 'company_admin', 'guard_name' => $guard]);
+        $companyAdmin->givePermissionTo(['providers.view', 'providers.manage']);
+
 
         $manager->syncPermissions([
             'dashboard.view',
@@ -99,6 +106,8 @@ class RolesAndPermissionsSeeder extends Seeder
             'payroll.view',
             'payroll.manage',
             'permissions.manage',
+            'providers.view',
+            'providers.manage',
         ]);
 
         $hr->syncPermissions([

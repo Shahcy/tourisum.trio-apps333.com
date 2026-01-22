@@ -19,7 +19,7 @@ class EmployeeResource extends Resource
     use ScopesToTenant;
     protected static ?string $model = Employee::class;
 
-    protected static ?int $navigationSort = 10;
+    protected static ?int $navigationSort = 51;
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     // Tenancy

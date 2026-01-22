@@ -21,6 +21,7 @@ class InvoiceResource extends Resource
     protected static ?string $model = Invoice::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?int $navigationSort = 30;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.

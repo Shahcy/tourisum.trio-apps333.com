@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\Concerns\TranslatesResourceAttributes;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Facades\Filament;
@@ -9,15 +10,14 @@ use Filament\Forms;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Form;
 use Filament\Resources\Resource;
-use App\Filament\Resources\Concerns\TranslatesResourceAttributes;
 use Filament\Tables;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
-use Illuminate\Support\Facades\DB;
 
 class UserResource extends Resource
 {
@@ -26,26 +26,27 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'SaaS';
+    protected static ?string $navigationGroup = 'saas.group';
     protected static ?string $navigationLabel = 'Users';
     protected static ?string $modelLabel = 'User';
     protected static ?string $pluralModelLabel = 'Users';
-    protected static bool $shouldRegisterNavigation = true;
+    protected static ?int $navigationSort = 97;
 
     protected static function isSuperAdmin(): bool
     {
         return (bool) Filament::auth()->user()?->hasRole('super_admin');
     }
 
-    public static function shouldRegisterNavigation(): bool
-    {
-        $user = Filament::auth()->user();
-        return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
-    }
-
     protected static function isPortalPanel(): bool
     {
         return Filament::getCurrentPanel()?->getId() === 'portal';
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        $user = Filament::auth()->user();
+
+        return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
     }
 
     public static function canCreate(): bool
@@ -55,23 +56,24 @@ class UserResource extends Resource
             return false;
         }
 
-        // Explicitly allow creation for admins and company admins.
         return $user->hasAnyRole(['super_admin', 'admin', 'company_admin']);
     }
 
     public static function canViewAny(): bool
     {
         $user = Filament::auth()->user();
+
         return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
     }
 
     public static function canEdit($record): bool
     {
         $user = Filament::auth()->user();
+
         return (bool) ($user?->hasAnyRole(['super_admin', 'admin', 'company_admin']));
     }
 
-    public static function form(Forms\Form $form): Forms\Form
+    public static function form(Form $form): Form
     {
         return $form->schema([
             Section::make('User Information')
@@ -88,16 +90,14 @@ class UserResource extends Resource
                         ->maxLength(255)
                         ->unique(ignoreRecord: true),
 
-                    // Portal: يختبئ اختيار التينانت
-                    // Admin Panel: إجباري تحديد التينانت
                     Select::make('tenant_id')
                         ->label('Company (Tenant)')
                         ->relationship('tenant', 'name')
                         ->searchable()
                         ->preload()
-                        ->required()
-                        ->visible(fn() => ! static::isPortalPanel())
-                        ->disabled(fn() => static::isPortalPanel()),
+                        ->required(fn(): bool => static::isSuperAdmin())
+                        ->visible(fn(): bool => static::isSuperAdmin() && ! static::isPortalPanel())
+                        ->disabled(fn(): bool => static::isPortalPanel()),
 
                     Select::make('roles')
                         ->label('Roles')
@@ -105,17 +105,15 @@ class UserResource extends Resource
                         ->relationship(
                             name: 'roles',
                             titleAttribute: 'name',
-                            modifyQueryUsing: function ($query) {
+                            modifyQueryUsing: function (Builder $query): void {
                                 $query->where('guard_name', 'web');
 
-                                // Super admin يشاهد فقط الأدوار الإدارية
                                 if (static::isSuperAdmin()) {
                                     $query->whereIn('name', ['super_admin', 'admin', 'company_admin']);
                                     return;
                                 }
 
-                                // باقي اللوحات: استبعاد super_admin
-                                $query->where('name', '!=', 'super_admin');
+                                $query->whereNotIn('name', ['super_admin', 'admin', 'company_admin']);
                             }
                         )
                         ->preload()
@@ -129,15 +127,15 @@ class UserResource extends Resource
                         ->label('Password')
                         ->password()
                         ->minLength(8)
-                        ->dehydrateStateUsing(fn($state) => filled($state) ? Hash::make($state) : null)
-                        ->dehydrated(fn($state) => filled($state))
-                        ->required(fn(string $operation) => $operation === 'create'),
+                        ->dehydrateStateUsing(fn(?string $state): ?string => filled($state) ? Hash::make($state) : null)
+                        ->dehydrated(fn(?string $state): bool => filled($state))
+                        ->required(fn(string $context): bool => $context === 'create'),
                 ])
                 ->columns(1),
         ]);
     }
 
-    public static function table(Tables\Table $table): Tables\Table
+    public static function table(Table $table): Table
     {
         return $table
             ->columns([
@@ -151,25 +149,11 @@ class UserResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                // في Portal لا نعرض الشركة
                 TextColumn::make('tenant.name')
                     ->label('Company')
                     ->sortable()
                     ->searchable()
-                    ->visible(function (): bool {
-                        $id = Auth::id();
-                        if (! $id) {
-                            return false;
-                        }
-
-                        return DB::table('model_has_roles')
-                            ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                            ->where('model_has_roles.model_type', User::class)
-                            ->where('model_has_roles.model_id', $id)
-                            ->where('roles.name', 'super_admin')
-                            ->exists();
-                    }),
-
+                    ->visible(fn(): bool => static::isSuperAdmin()),
 
                 TextColumn::make('roles.name')
                     ->label('Roles')
@@ -186,36 +170,30 @@ class UserResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListUsers::route('/'),
+            'index' => Pages\ListUsers::route('/'),
             'create' => Pages\CreateUser::route('/create'),
-            'edit'   => Pages\EditUser::route('/{record}/edit'),
+            'edit' => Pages\EditUser::route('/{record}/edit'),
         ];
     }
 
     public static function mutateFormDataBeforeCreate(array $data): array
     {
-        if (! static::isPortalPanel()) {
-            return $data;
+        $user = Auth::user();
+
+        if (! static::isSuperAdmin()) {
+            $data['tenant_id'] = Filament::getTenant()?->id ?? $user?->tenant_id;
         }
-
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
 
         return $data;
     }
 
     public static function mutateFormDataBeforeSave(array $data): array
     {
-        if (! static::isPortalPanel()) {
-            return $data;
+        $user = Auth::user();
+
+        if (! static::isSuperAdmin()) {
+            $data['tenant_id'] = Filament::getTenant()?->id ?? $user?->tenant_id;
         }
-
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $data['tenant_id'] = Filament::getTenant()?->id ?? $u?->tenant_id;
 
         return $data;
     }
@@ -224,34 +202,19 @@ class UserResource extends Resource
     {
         $query = parent::getEloquentQuery();
 
-        $authId = Auth::id();
-
-        $isSuper = $authId
-            ? DB::table('model_has_roles')
-                ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
-                ->where('model_has_roles.model_type', User::class)
-                ->where('model_has_roles.model_id', $authId)
-                ->where('roles.name', 'super_admin')
-                ->exists()
-            : false;
-
-        // سوبر أدمن: يشاهد فقط الأدوار الإدارية
-        if ($isSuper) {
-            return $query->whereHas('roles', fn($q) => $q->whereIn('name', [
-                'super_admin',
-                'admin',
-                'company_admin',
-            ]));
+        if (static::isSuperAdmin()) {
+            return $query->whereHas('roles', function (Builder $rolesQuery): void {
+                $rolesQuery->whereIn('name', ['super_admin', 'admin', 'company_admin']);
+            });
         }
 
-        // باقي اللوحات: حصر بيانات التينانت الحالي واستبعاد super_admin
-        /** @var User|null $u */
-        $u = Auth::user();
-
-        $tenantId = Filament::getTenant()?->id ?? $u?->tenant_id;
+        $user = Auth::user();
+        $tenantId = Filament::getTenant()?->id ?? $user?->tenant_id;
 
         return $query
             ->where('tenant_id', $tenantId)
-            ->whereDoesntHave('roles', fn($q) => $q->where('name', 'super_admin'));
+            ->whereDoesntHave('roles', function (Builder $rolesQuery): void {
+                $rolesQuery->where('name', 'super_admin');
+            });
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Tenant;
+use App\Support\TenantManager;
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,6 +12,11 @@ class TenantContext
     public static function current(): ?Tenant
     {
         $t = Filament::getTenant();
+        if ($t instanceof Tenant) {
+            return $t;
+        }
+
+        $t = TenantManager::current();
         if ($t instanceof Tenant) {
             return $t;
         }

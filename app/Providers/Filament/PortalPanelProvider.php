@@ -20,6 +20,7 @@ use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class PortalPanelProvider extends PanelProvider
@@ -37,15 +38,8 @@ class PortalPanelProvider extends PanelProvider
             ->homeUrl('/portal')
 
             // Branding ديناميكي
-            ->brandName(fn() => Filament::getTenant()?->name ?? config('app.name'))
-            ->brandLogo(function () {
-                $t = Filament::getTenant();
-                if (! $t?->logo_path) {
-                    return null;
-                }
-                return asset('storage/' . ltrim($t->logo_path, '/'));
-            })
-            ->brandLogoHeight('2.75rem')
+            ->brandName(null)
+            ->brandLogo(null)
 
             // Hook للـ brand لو بدك
             ->renderHook('panels::brand', fn() => view('filament.hooks.portal-brand', [
@@ -66,7 +60,7 @@ class PortalPanelProvider extends PanelProvider
                 \App\Http\Middleware\ApplyTenantTheme::class,
             ])
             ->assets([
-                Css::make('portal-css', resource_path('css/portal.css')),
+                Css::make('portal-css', resource_path('css/filament/portal.css')),
             ])
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
@@ -77,7 +71,7 @@ class PortalPanelProvider extends PanelProvider
                 \Filament\Navigation\MenuItem::make('leave_impersonation')
                     ->label('Back to Super Admin')
                     ->url(fn() => route('admin.impersonate.leave'))
-                    ->visible(fn() => (bool) session('impersonator_id')),
+                    ->visible(fn() => (bool) Auth::user()?->isImpersonated()),
             ])
 
             ->navigationItems([
@@ -85,7 +79,7 @@ class PortalPanelProvider extends PanelProvider
                     ->label('Back to Super Admin')
                     ->icon('heroicon-o-arrow-left-on-rectangle')
                     ->url(fn() => route('admin.impersonate.leave'))
-                    ->visible(fn() => (bool) session('impersonator_id')),
+                    ->visible(fn() => (bool) Auth::user()?->isImpersonated()),
             ])
 
             ->authMiddleware([

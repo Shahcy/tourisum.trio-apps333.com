@@ -28,10 +28,11 @@ class TenantResource extends Resource
     protected static ?string $model = Tenant::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
-    protected static ?string $navigationGroup = 'SaaS';
+    protected static ?string $navigationGroup = 'saas.group';
     protected static ?string $navigationLabel = 'Companies';
     protected static ?string $modelLabel = 'Company';
     protected static ?string $pluralModelLabel = 'Companies';
+    protected static ?int $navigationSort = 96;
     protected static bool $shouldRegisterNavigation = true;
 
     public static function canCreate(): bool

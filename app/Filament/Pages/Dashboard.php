@@ -15,6 +15,7 @@ class Dashboard extends BaseDashboard
 
     protected static ?string $title = 'Dashboard';
     protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?int $navigationSort = 1;
 
     protected function getWidgetsColumns(): int | array
     {

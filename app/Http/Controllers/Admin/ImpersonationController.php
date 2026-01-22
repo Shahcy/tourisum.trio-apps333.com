@@ -14,18 +14,12 @@ class ImpersonationController extends Controller
     {
         $me = Auth::user();
 
-        // حط تحقق بسيط (حسب عندك رول super_admin)
-        // إذا عندك permissions بدل roles، بدّلها حسب نظامك
         abort_unless($me, 403);
         abort_unless($me->canImpersonate(), 403);
 
-        // اختار المستخدم اللي رح ندخل فيه داخل الشركة:
-        // 1) إذا عندك رول "admin" داخل التيننت
-        // 2) أو أول مستخدم تابع للتيننت
         $target = User::query()
             ->where('tenant_id', $tenant->id)
             ->where(function ($q) {
-                // إذا User عندك فيه spatie roles
                 if (method_exists(User::class, 'role')) {
                     $q->role('admin');
                 }
@@ -38,10 +32,8 @@ class ImpersonationController extends Controller
 
         abort_unless($target, 404, 'No tenant admin user found for this tenant.');
 
-        // Impersonate
         $me->impersonate($target);
 
-        // نرجع على البورتال مباشرة (لوكل path-based)
         return redirect('/portal/' . $tenant->domain);
     }
 
@@ -55,3 +47,4 @@ class ImpersonationController extends Controller
         return redirect('/admin');
     }
 }
+

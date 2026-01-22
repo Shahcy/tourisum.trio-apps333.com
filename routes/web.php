@@ -3,7 +3,6 @@
 use App\Http\Controllers\Admin\ImpersonationController;
 use App\Models\Tenant;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Livewire\Livewire;
@@ -19,23 +18,18 @@ Route::get('/lang/{locale}', function (string $locale) {
 })->name('lang.switch');
 
 Route::middleware(['web', 'auth'])->group(function () {
-    // SuperAdmin -> O_OrU^U, UŸOœO_U.U+ O'OñUŸOc (Impersonation) O"O_U^U+ Login
     Route::get('/tenants/{tenant}/login-as-admin', function (Tenant $tenant) {
-        abort_unless(Auth::user()?->canImpersonate(), 403);
+        /** @var User|null $impersonator */
+        $impersonator = Auth::user();
+        abort_unless($impersonator?->canImpersonate(), 403);
 
-        $super = Auth::user();
-        session(['impersonator_id' => $super?->id]);
+        $targetUser = User::where('tenant_id', $tenant->id)
+            ->orderBy('id')
+            ->firstOrFail();
 
-        $portalPanel = Filament::getPanel('portal');
-        Filament::setCurrentPanel($portalPanel);
-        Filament::setTenant($tenant);
+        $impersonator->impersonate($targetUser);
 
-        $target = User::where('tenant_id', $tenant->id)->orderBy('id')->firstOrFail();
-
-        Auth::guard($portalPanel->getAuthGuard())->login($target);
-        request()->session()->regenerate();
-
-        return redirect()->route('filament.portal.pages.dashboard', ['tenant' => $tenant->id]);
+        return redirect('/portal/' . $tenant->domain);
     })->name('tenants.login-as-admin');
 
     Route::get('/admin/impersonate/{tenant}', [ImpersonationController::class, 'start'])
@@ -45,7 +39,6 @@ Route::middleware(['web', 'auth'])->group(function () {
         ->name('admin.impersonate.leave');
 });
 
-// Livewire v3 required endpoints (explicit)
 Livewire::setUpdateRoute(function ($handle) {
     return Route::post('/livewire/update', $handle)->name('livewire.update');
 });

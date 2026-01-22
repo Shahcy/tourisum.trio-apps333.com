@@ -3,11 +3,15 @@
 .fi-sidebar-header img,
 .fi-logo img,
 .fi-brand img {
+  width: 2rem !important;
+  height: 2rem !important;
   border-radius: 9999px !important;
   overflow: hidden !important;
   object-fit: cover !important;
 }
 .portal-brand img {
+    width: 2rem;
+    height: 2rem;
     border-radius: 9999px;
     object-fit: cover;
 }
@@ -27,4 +31,3 @@
     outline: 2px solid;
     outline-offset: 2px;
 }
-

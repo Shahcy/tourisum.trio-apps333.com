@@ -18,6 +18,7 @@ class CostCenterResource extends Resource
     protected static ?string $model = CostCenter::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-office-2';
+    protected static ?int $navigationSort = 41;
 
     /**
      * Avoid hardcoded strings so locale switching works properly.

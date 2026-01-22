@@ -19,7 +19,7 @@ class LeaveRequestResource extends Resource
     use ScopesToTenant;
     protected static ?string $model = LeaveRequest::class;
 
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 53;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
     // Tenancy

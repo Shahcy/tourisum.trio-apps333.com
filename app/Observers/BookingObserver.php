@@ -4,15 +4,22 @@ namespace App\Observers;
 
 use App\Models\Account;
 use App\Models\Booking;
+use App\Models\BookingActivity;
 use App\Models\Invoice;
 use App\Models\Payment;
-use Filament\Facades\Filament;
+use Illuminate\Support\Facades\Auth;
 
 class BookingObserver
 {
+    public function creating(Booking $booking): void
+    {
+        if (! $booking->booking_number) {
+            $booking->booking_number = $this->nextBookingNumber($booking->tenant_id);
+        }
+    }
+
     public function created(Booking $booking): void
     {
-        // إنشاء فاتورة تلقائياً عند إنشاء الحجز
         $invoice = Invoice::create([
             'tenant_id' => $booking->tenant_id,
             'customer_id' => $booking->customer_id,
@@ -26,12 +33,11 @@ class BookingObserver
         $invoice->items()->create([
             'title' => $booking->type,
             'qty' => 1,
-            'unit_price' => (float) $booking->total_amount,
+            'unit_price' => (float) ($booking->total_amount ?: $booking->grand_total ?: 0),
         ]);
 
         $invoice->recalculateTotals();
 
-        // إذا تم إدخال مدفوع عند الحجز، نسجل Payment قبض مربوط على الفاتورة
         $paid = (float) $booking->paid_amount;
         if ($paid > 0) {
             $accountId = $this->resolveDefaultCashAccountId($booking->tenant_id);
@@ -49,6 +55,29 @@ class BookingObserver
                 'notes' => 'Auto payment from booking #' . $booking->id,
             ]);
         }
+
+        $this->logActivity($booking, 'created', 'Booking created');
+    }
+
+    public function updated(Booking $booking): void
+    {
+        if ($booking->wasChanged('status')) {
+            $this->logActivity(
+                $booking,
+                'status_changed',
+                'Status changed to ' . $booking->status
+            );
+        }
+    }
+
+    private function nextBookingNumber(int|string $tenantId): string
+    {
+        $maxId = (int) Booking::query()
+            ->where('tenant_id', $tenantId)
+            ->max('id');
+
+        $next = $maxId + 1;
+        return 'BKG-' . str_pad((string) $next, 6, '0', STR_PAD_LEFT);
     }
 
     private function nextInvoiceNumber(int|string $tenantId): string
@@ -77,5 +106,16 @@ class BookingObserver
         }
 
         return (int) $account->id;
+    }
+
+    private function logActivity(Booking $booking, string $action, string $description): void
+    {
+        BookingActivity::create([
+            'booking_id' => $booking->id,
+            'tenant_id' => $booking->tenant_id,
+            'actor_id' => Auth::id(),
+            'action' => $action,
+            'description' => $description,
+        ]);
     }
 }
